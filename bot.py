@@ -24,14 +24,11 @@ class BotInitialization():
 
     @staticmethod
     def process_command(ctx,message,guild,channel):
-        if ctx.command is None:
-            return
-        elif message.guild.id not in guild:
-            return
-        elif message.channel.id not in channel:
-            return
-        else:
-            self.invoke(ctx)
+        if ctx.command :
+            if message.guild.id in guild:
+                if message.channel.id in channel:
+                    return True
+        return False
 
 class Bot1947(commands.AutoShardedBot):
 
@@ -59,7 +56,10 @@ class Bot1947(commands.AutoShardedBot):
 
     async def process_commands(self, message):
         ctx = await self.get_context(message, cls=Context)
-        return self.bot_init.process_command(ctx,message,self.guild_id, self.channel_id)
+        if self.bot_init.process_command(ctx,message,self.guild_id, self.channel_id):
+            await self.invoke(ctx)
+        else:
+            return 
     
     async def on_message(self, message):
         if message.author.bot:

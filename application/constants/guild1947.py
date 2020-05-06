@@ -26,7 +26,7 @@ class Guild1947():
     POST_TO_TWITTER_CHANNEL_ID = 577023021655523339
     EKA_COC_CHANNEL_ID=591291181925793936
     EKA_WAR_LOG_CHANNEL_ID =567822978281373707
-    CLAN_TAG = "#RJ9JYYQQ"
+    
 
 class Guild1947Image():
     RECRUITMENT_IMAGE_LOC= "/images/recruitment.jpg"
@@ -39,7 +39,7 @@ class Guild1947Image():
 
 class Guild1947Clan():
     CLAN_URL_1947 = "https://link.clashofclans.com/?action=OpenClanProfile&tag=RJ9JYYQQ"
-
+    CLAN_TAG = "#29L9RVCL8"
 
 class RolesGuild1947():
     ADMIN_ROLE_NAME = "C o м м a n d e r" 

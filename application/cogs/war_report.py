@@ -1,5 +1,5 @@
 from discord.ext import commands
-from application.constants.guild1947 import Guild1947,Guild1947Message
+from application.constants.guild1947 import Guild1947,Guild1947Message,Guild1947Clan
 
 class WarReporter(commands.Cog, name="War Report"):
     def __init__(self, bot):
@@ -9,7 +9,7 @@ class WarReporter(commands.Cog, name="War Report"):
             self.on_war_attack,
             self.on_war_state_change
         )
-        self.bot.coc.add_war_update(CLAN_TAG)
+        self.bot.coc.add_war_update(Guild1947Clan.CLAN_TAG)
 
     def cog_unload(self):
         self.bot.coc.remove_events(

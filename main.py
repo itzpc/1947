@@ -22,7 +22,7 @@ class BOTApp():
 
 if __name__ == "__main__":
     directory= os.getcwd()
-    #logging.basicConfig(filename=directory+DiscordConfig.LOG_FILE, level=logging.DEBUG,format='%(asctime)s : %(message)s', datefmt='%m-%d-%Y %I:%M:%S %p')
+    logging.basicConfig(filename=directory+DiscordConfig.LOG_FILE, level=logging.DEBUG,format='%(asctime)s : %(message)s', datefmt='%m-%d-%Y %I:%M:%S %p')
     logging.info('Logging has started.')
     Bot = BOTApp()
     Bot.execute()

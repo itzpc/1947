@@ -12,5 +12,6 @@ __pycache__/
 
 #ConfigFile
 application/config/config.py
+
 #FileSystem
 .DS_Store
