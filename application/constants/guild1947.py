@@ -56,4 +56,4 @@ class Guild1947Font():
     PINEAPPLE_FONT = "/fonts/pineapple.ttf"
 
 class Guild1947Message():
-    REPORT_STYLE = """{att.attacker.name} (No. {att.attacker.map_position}, TH{att.attacker.town_hall}) just {verb} {att.defender.name} (No. {att.defender.map_position}, TH{att.defender.town_hall}) for {att.stars} stars and {att.destruction}%."""
+    REPORT_STYLE = """{att.attacker.name} `({att.attacker.tag})` (No. {att.attacker.map_position}, TH{att.attacker.town_hall})  {verb} {att.defender.name} `({att.defender.tag})`(No. {att.defender.map_position}, TH{att.defender.town_hall}) -> {att.stars} stars : {att.destruction}%."""
