@@ -3,22 +3,23 @@ from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 class PrepMessage():
     @staticmethod
-    def get_attack_info(is_opponent,attcker,defender):
+    def get_attack_info(is_opponent,attacker,defender):
         if is_opponent:
             attack_emoji= str(Emoji.BACKWARD_RED)
             colour = 0xFF0000
             star_emoji = {"star_blank":BotEmoji.STAR_BLANK,"star":BotEmoji.STAR_RED,"star_new":BotEmoji.STAR_RED_NEW}
             type= str("DEFENDED")
-            opponent_member = attcker
-
+            opponent_member = attacker
+            ally = defender
         else:
             
-            emoji= str(Emoji.FORWARD_GREEN)
+            attack_emoji= str(Emoji.FORWARD_GREEN)
             colour = 0x008000
             type=str("ATTACKED")
             star_emoji = {"star_blank":BotEmoji.STAR_BLANK,"star":BotEmoji.STAR_GREEN,"star_new":BotEmoji.STAR_GREEN_NEW}
             opponent_member = defender
-        return attack_emoji, star_emoji, type, opponent_member,colour
+            ally=attacker
+        return attack_emoji, star_emoji, type, opponent_member, ally, colour
 
     @staticmethod
     def get_th_emoji(th):
@@ -53,8 +54,9 @@ class PrepMessage():
             s_emoji+=str(star_emoji['star_blank'])*blank_star_count
 
         else:
-            count = 3
-            s_emoji= str(star_emoji['star_blank'])*count
+            s_emoji = str(star_emoji['star_new'])*stars
+            count=3-stars
+            s_emoji += str(star_emoji['star_blank'])*count
         return s_emoji
     
     @staticmethod
@@ -93,18 +95,18 @@ class PrepMessage():
 
     def prepare_on_war_attack_message(self,attack,war):
         embed_args = dict()
-        attack_emoji, star_emoji, attack_msg , enemy,colour=self.get_attack_info(attack.attacker.is_opponent,attack.attcker,attack.defender)
-        content = f"`{attack.attacker.map_position}`. {attack.attacker.name} {self.get_th_emoji(attack.attacker.town_hall)} {attack_emoji} {self.get_th_emoji(attack.defender.town_hall)} `{attack.defender.map_position}`. {attack.defender.name}"
+        attack_emoji, star_emoji, attack_msg , enemy, ally,colour=self.get_attack_info(attack.attacker.is_opponent,attack.attacker,attack.defender)
+        content = f"`{ally.map_position}`. {ally.name} {self.get_th_emoji(ally.town_hall)} {attack_emoji} {self.get_th_emoji(enemy.town_hall)} `{enemy.map_position}`. {enemy.name}"
         embed_args["author_name"]="Details"
         embed_args["embed_title"]= f"{attack_msg}"
-        description=f"**STARS**\n\n"
-        description+=f"{self.print_war_stars(enemy,star_emoji,attack.stars)} \n"
-        description=f"**DESTRUCTION**\n\n"
-        description+=f"{self.print_destruction(enemy,attack.destruction)} \n"
-        description=f"**HIT TYPE**\n\n"
-        description+=f"{self.print_hit_type(enemy,attack.attacker.town_hall,attack.defender.town_hall)} \n"
-        description=f"**PREVIOUS HITS ON THIS BASE**\n\n"
-        description+=f"{self.print_previous_hit(enemy)} \n"
+        description=f"**STARS**\n"
+        description+=f"{self.print_war_stars(enemy,star_emoji,attack.stars)} \n\n"
+        description+=f"**DESTRUCTION**\n"
+        description+=f"{self.print_destruction(enemy,attack.destruction)} \n\n"
+        description+=f"**HIT TYPE**\n"
+        description+=f"{self.print_hit_type(enemy,attack.attacker.town_hall,attack.defender.town_hall)} \n \n"
+        description+=f"**PREVIOUS HITS ON THIS BASE**\n"
+        description+=f"{self.print_previous_hit(enemy,star_emoji)} \n \n"
         embed_args["embed_description"]=description
         embed_args["embed_colour"]=colour
         create_msg = CreateMessage(content,True)
