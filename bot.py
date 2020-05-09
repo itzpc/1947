@@ -12,6 +12,7 @@ import sys, traceback
 from application.config.config import DiscordConfig
 from application.constants.guild1947 import Guild1947
 from application.cogs.utlis.context import Context
+from application.utlis.drive_utlis import Drive_Config
 
 class BotInitialization():
 
@@ -35,6 +36,7 @@ class Bot1947(commands.AutoShardedBot):
     def __init__(self,coc_client):
         self.bot_init = BotInitialization()
         self.coc = coc_client
+        self.drive = Drive_Config()
         super().__init__(command_prefix=self.bot_init.get_prefix, description=DiscordConfig.DESCRIPTION)
         self.owner_id = DiscordConfig.BOT_OWNER_ID
         self.channel_id = DiscordConfig.ALLOWED_CHANNELS

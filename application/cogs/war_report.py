@@ -1,6 +1,8 @@
 from discord.ext import commands
 from application.constants.guild1947 import Guild1947,Guild1947Message,Guild1947Clan
 from application.constants.emoji import Emoji
+from application.statics.prepare_message import PrepMessage
+
 
 class WarReporter(commands.Cog, name="War Report"):
     def __init__(self, bot):
@@ -25,13 +27,15 @@ class WarReporter(commands.Cog, name="War Report"):
 
     async def on_war_attack(self, attack, war):
         print("on war attack")
+        content, embed = PrepMessage().prepare_on_war_attack_message(attack,war)
+        '''
         if attack.attacker.is_opponent:
             verb = f"{Emoji.BACKWARD_RED}"
         else:
             verb = f"{Emoji.FORWARD_GREEN}"
-        print(attack.attacker)
+        print(attack.attacker)'''
         
-        await self.report_channel.send(Guild1947Message.REPORT_STYLE.format(att=attack, verb=verb))
+        await self.report_channel.send(content=content,embed=embed)
 
     async def on_war_state_change(self, current_state, war):
         print("on war state change")

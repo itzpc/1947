@@ -39,7 +39,7 @@ class Guild1947Image():
 
 class Guild1947Clan():
     CLAN_URL_1947 = "https://link.clashofclans.com/?action=OpenClanProfile&tag=RJ9JYYQQ"
-    CLAN_TAG = "#29L9RVCL8"
+    CLAN_TAG = "#YP8U8QG9"
 
 class RolesGuild1947():
     ADMIN_ROLE_NAME = "C o м м a n d e r" 

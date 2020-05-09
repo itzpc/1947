@@ -4,3 +4,7 @@ async-timeout
 discord.py
 requests
 git+https://github.com/mathsman5133/coc.py
+gspread
+oauth2client
+pprint
+pandas
