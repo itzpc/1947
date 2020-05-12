@@ -4,12 +4,16 @@ from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 class PrepMessage():
     
     @staticmethod
-    def get_info_on_defender_bases(defender,star_emoji):
+    def get_info_on_defender_bases(defender,star_emoji,attack):
         best_stars = best_destruction = 0
+        print(f"\nATTACK {attack}")
+        print(f"\nDEFENSES {defender.defenses.remove(attack)}")
         defensive_attack = list()
         if len(defender.defenses)>0:
             
             for member_defenses in defender.defenses:
+                if member_defenses.attacker_tag == attack.attacker_tag:
+                    continue
                 if member_defenses.stars > best_stars :
                     best_stars = member_defenses.stars
                 if member_defenses.destruction > best_destruction:
@@ -115,7 +119,8 @@ class PrepMessage():
     def prepare_on_war_attack_message(self,attack,war):
         embed_args = dict()
         attack_emoji, star_emoji, attack_msg , enemy, ally,colour=self.get_attack_info(attack.attacker.is_opponent,attack.attacker,attack.defender)
-        best_stars, best_destruction, defesive_attack = self.get_info_on_defender_bases(attack.defender,star_emoji)
+
+        best_stars, best_destruction, defesive_attack = self.get_info_on_defender_bases(attack.defender,star_emoji,attack)
         content = f"`{ally.map_position}`. {ally.name} {self.get_th_emoji(ally.town_hall)} {attack_emoji} {self.get_th_emoji(enemy.town_hall)} `{enemy.map_position}`. {enemy.name}"
         embed_args["author_name"]="Details"
         embed_args["embed_title"]= f"{attack_msg}"

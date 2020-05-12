@@ -37,7 +37,7 @@ class General(commands.Cog):
             logging.error(f"clan_search {Ex} ")
 
     @commands.max_concurrency(1)
-    @commands.command(name="war_status", aliases=["warstatus","status","Status"])
+    @commands.command(name="war_status", aliases=["warstatus","status","Status","Stats","stats"])
     async def war_status(self, ctx, clan_tag=None):
         if clan_tag is None:
             clan_tag = Guild1947Clan.CLAN_TAG
