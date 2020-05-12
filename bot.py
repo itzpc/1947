@@ -1,5 +1,6 @@
 # pip libraries
 import discord
+import gspread
 from discord.ext import commands
 # Inbuilt Libraries
 from datetime import datetime
@@ -18,17 +19,29 @@ class BotInitialization():
 
     @staticmethod
     def get_prefix(bot,message):
-        prefixes = DiscordConfig.PREFIX
+        '''prefixes = DiscordConfig.PREFIX
         if not message.guild:
-            return '1947'
-        return commands.when_mentioned_or(*prefixes)(bot, message)
+            return '1947'''
+        if message.channel.id in DiscordConfig.ALLOWED_CHANNELS:
+            
+            prefixes=list()
+            prefixes.append('')
+            return commands.when_mentioned_or(*prefixes)(bot, message)
+        else:
+            
+            prefixes=DiscordConfig.PREFIX
+        return commands.when_mentioned(bot, message)
 
     @staticmethod
-    def process_command(ctx,message,guild,channel):
+    async def process_command(ctx,message,guild,channel):
         if ctx.command :
-            if message.guild.id in guild:
-                if message.channel.id in channel:
+            if ctx.guild:
+                # if ctx.channel.id in DiscordConfig.ALLOWED_CHANNELS:
+                    
                     return True
+                    
+                        
+                
         return False
 
 class Bot1947(commands.AutoShardedBot):
@@ -58,7 +71,8 @@ class Bot1947(commands.AutoShardedBot):
 
     async def process_commands(self, message):
         ctx = await self.get_context(message, cls=Context)
-        if self.bot_init.process_command(ctx,message,self.guild_id, self.channel_id):
+        process_command = await self.bot_init.process_command(ctx,message,self.guild_id, self.channel_id)
+        if process_command:
             await self.invoke(ctx)
         else:
             return 
