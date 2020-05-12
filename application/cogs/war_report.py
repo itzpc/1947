@@ -28,18 +28,12 @@ class WarReporter(commands.Cog, name="War Report"):
     async def on_war_attack(self, attack, war):
         print(war.clan_tag)
         content, embed = PrepMessage().prepare_on_war_attack_message(attack,war)
-        '''
-        if attack.attacker.is_opponent:
-            verb = f"{Emoji.BACKWARD_RED}"
-        else:
-            verb = f"{Emoji.FORWARD_GREEN}"
-        print(attack.attacker)'''
-        
         await self.report_channel.send(content=content,embed=embed)
+
         if war.clan_tag == Guild1947Clan.CLAN_TAG:
-            await self.bot.get_channel(708676514400698379).send(content=content,embed=embed)
-        else:
-            await self.bot.get_channel(708779903138398231).send(content=content,embed=embed)
+            await self.bot.get_channel(708676514400698379).send(content=content,embed=embed) #Coc Api Server
+            await self.bot.get_channel(Guild1947.EKA_1947_WAR_LOG_CHANNEL_ID).send(content=content,embed=embed)
+        
         print("War attak Ends \n")
     async def on_war_state_change(self, current_state, war):
         await self.report_channel.send(f"{war.clan.name} just entered {current_state} state!")

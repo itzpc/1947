@@ -4,18 +4,17 @@ from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 class PrepMessage():
     
     @staticmethod
-    def get_info_on_defender_bases(defender):
+    def get_info_on_defender_bases(defender,star_emoji):
         best_stars = best_destruction = 0
         defensive_attack = list()
         if len(defender.defenses)>0:
-            print("PREV-",defender.defenses)
             
             for member_defenses in defender.defenses:
                 if member_defenses.stars > best_stars :
                     best_stars = member_defenses.stars
                 if member_defenses.destruction > best_destruction:
                     best_destruction = member_defenses.destruction
-                defensive_attack.append(f"{member_defenses.attacker.map_position} {member_defenses.attacker.name} ⭐:{member_defenses.stars} {member_defenses.destruction}%")
+                defensive_attack.append(f"{member_defenses.attacker.map_position}.` {member_defenses.attacker.name} `{str(star_emoji['star'])*member_defenses.stars} {member_defenses.destruction}%")
         else:
             print("No Defenses")
             
@@ -80,7 +79,8 @@ class PrepMessage():
     @staticmethod
     def print_destruction(prev_best_destruction,destruction):
         if prev_best_destruction:
-            change_in_destruction = prev_best_destruction - destruction
+            print("Prev Des",prev_best_destruction)
+            change_in_destruction =  destruction - prev_best_destruction
             
             if change_in_destruction >0 :
                 msg= f" {destruction} % {BotEmoji.GREEN_UP} {change_in_destruction} "
@@ -95,6 +95,8 @@ class PrepMessage():
     def print_hit_type(enemy,th_attacker,th_defender):
         if enemy.best_opponent_attack is None:
             msg = " FRESH HIT - "
+        else:
+            msg ="NOT A FRESH HIT - "
         if th_attacker == th_defender :
             msg+= " SAME TH HIT "
         elif th_attacker < th_defender:
@@ -102,6 +104,7 @@ class PrepMessage():
         else:
             msg+= " DIP"
         return str(msg)
+
     @staticmethod
     def print_previous_hit(defesive_attack,star_emoji):
         msg =""
@@ -110,11 +113,9 @@ class PrepMessage():
         return str(msg)
 
     def prepare_on_war_attack_message(self,attack,war):
-        print("Attack")
         embed_args = dict()
         attack_emoji, star_emoji, attack_msg , enemy, ally,colour=self.get_attack_info(attack.attacker.is_opponent,attack.attacker,attack.defender)
-        best_stars, best_destruction, defesive_attack = self.get_info_on_defender_bases(attack.defender)
-        print(f"BEST - {str(best_stars)}")
+        best_stars, best_destruction, defesive_attack = self.get_info_on_defender_bases(attack.defender,star_emoji)
         content = f"`{ally.map_position}`. {ally.name} {self.get_th_emoji(ally.town_hall)} {attack_emoji} {self.get_th_emoji(enemy.town_hall)} `{enemy.map_position}`. {enemy.name}"
         embed_args["author_name"]="Details"
         embed_args["embed_title"]= f"{attack_msg}"
@@ -123,12 +124,11 @@ class PrepMessage():
         description+=f"**DESTRUCTION**\n"
         description+=f"{self.print_destruction(best_destruction,attack.destruction)} \n\n"
         description+=f"**HIT TYPE**\n"
-        description+=f"{self.print_hit_type(attack.defender,attack.attacker.town_hall,attack.defender.town_hall)} \n \n"
+        description+=f"{self.print_hit_type(enemy,attack.attacker.town_hall,attack.defender.town_hall)} \n \n"
         if len(defesive_attack)>0:
             description+=f"**PREVIOUS HITS ON THIS BASE**\n"
             description+=f"{self.print_previous_hit(defesive_attack,star_emoji)} \n \n"
         embed_args["embed_description"]=description
         embed_args["embed_colour"]=colour
         create_msg = CreateMessage(content,True)
-        print(f"content = {content} \n descrption = {description}\n")
         return create_msg.create_message(**embed_args)
