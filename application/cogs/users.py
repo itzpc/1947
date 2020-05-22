@@ -3,7 +3,6 @@ import logging
 import asyncio
 import gspread
 from discord.ext import commands
-from application.utlis.drive_utlis import Drive_Config
 from application.constants.guild1947 import Guild1947Clan
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
@@ -12,7 +11,6 @@ class General(commands.Cog):
     """Description of what this file does"""
     def __init__(self, bot):
         self.bot = bot
-        self.drive_client = self.bot.drive.create_client()
 
     @commands.max_concurrency(1)
     @commands.command(name="search_clan", aliases=["Search_clan","Searchclan","sc","Sc"])
@@ -153,10 +151,7 @@ class General(commands.Cog):
             player_tag = coc.utils.correct_tag(player_tag)
             #try:
             player = await self.bot.coc.get_player(player_tag)
-            drive = Drive_Config()
-            drive_client = drive.create_client()
-            sheet= drive.open_sheet(drive_client,1)
-            data = sheet.get_all_records()
+            '''
             insert_row = [str(memberObj.id),player.tag]
             result,row = self.insert_into_google_sheet(sheet,insert_row,memberObj,player)
             content=str(result)+str(row) 
@@ -177,9 +172,9 @@ class General(commands.Cog):
                             content=f"{player.name} **is claimed by** user not on this server"
             else:
                 list_of_tag = list(row.values())
-                content=f"Sorry, You can claim maximum of 5 villages only.  Other linked villages are {list_of_tag[1:]}"
+                content=f"Sorry, You can claim maximum of 5 villages only.  Other linked villages are {list_of_tag[1:]}"'''
 
-            await ctx.send(content=content)
+            await ctx.send(content=player)
             # except Exception as Ex:
             #     await ctx.send(f" Player not found with player_tag : {player_tag} \n ```{Ex}```")
 def setup(bot):

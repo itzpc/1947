@@ -14,4 +14,4 @@ class Coc_Config():
         self.password = CocConfig.PASSWORD
     
     def create_client(self):
-        return coc.login(self.email,self.password, client=CustomClient, key_names="1947local")
+        return coc.login(self.email,self.password, client=CustomClient, key_names="1947")

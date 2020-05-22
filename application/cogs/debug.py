@@ -41,7 +41,7 @@ class Debug(commands.Cog):
         elif isinstance(error, discord.errors.Forbidden):
             await ctx.send("I don't have enough permsissions to do that!")
         elif isinstance(error, commands.errors.MissingPermissions):
-            await ctx.send("You don't have enough permissions to use this command!")
+            await ctx.send(f"You don't have enough permissions to use this command!")
         elif isinstance(error, commands.errors.CommandOnCooldown):
             pass
         elif isinstance(error, commands.errors.MissingAnyRole):

@@ -10,18 +10,26 @@ import aiohttp
 import asyncio
 import sys, traceback
 # userDefined
-from application.config.config import DiscordConfig
+from application.config.config import DiscordConfig,PostgreeDB_Config
 from application.constants.guild1947 import Guild1947
 from application.cogs.utlis.context import Context
-from application.utlis.drive_utlis import Drive_Config
+from application.database.postgre_db import PostgreDB
+from application.database.db_utlis import DbUtlis
 
 class BotInitialization():
 
     @staticmethod
-    def get_prefix(bot,message):
-        '''prefixes = DiscordConfig.PREFIX
-        if not message.guild:
-            return '1947'''
+    async def get_prefix(bot,message):
+        allowed_channels = await DbUtlis(bot.postgre_db).get_default_channel(message.guild.id)
+        if allowed_channels:
+            if message.channel.id in allowed_channels:
+                prefixes=list()
+                prefixes.append('')
+                return commands.when_mentioned_or(*prefixes)(bot, message)
+            
+        return commands.when_mentioned(bot, message)
+
+        '''
         if message.channel.id in DiscordConfig.ALLOWED_CHANNELS:
             
             prefixes=list()
@@ -31,13 +39,11 @@ class BotInitialization():
             
             prefixes=DiscordConfig.PREFIX
         return commands.when_mentioned(bot, message)
-
+        '''
     @staticmethod
     async def process_command(ctx,message,guild,channel):
         if ctx.command :
             if ctx.guild:
-                # if ctx.channel.id in DiscordConfig.ALLOWED_CHANNELS:
-                    
                     return True
                     
                         
@@ -46,10 +52,10 @@ class BotInitialization():
 
 class Bot1947(commands.AutoShardedBot):
 
-    def __init__(self,coc_client):
+    def __init__(self,coc_client,connection):
         self.bot_init = BotInitialization()
+        self.postgre_db=connection
         self.coc = coc_client
-        self.drive = Drive_Config()
         super().__init__(command_prefix=self.bot_init.get_prefix, description=DiscordConfig.DESCRIPTION)
         self.owner_id = DiscordConfig.BOT_OWNER_ID
         self.channel_id = DiscordConfig.ALLOWED_CHANNELS
@@ -83,16 +89,19 @@ class Bot1947(commands.AutoShardedBot):
         await self.process_commands(message)
 
     async def on_ready(self):
+        logging.info("BOT IS ONLINE")
         print(f'Ready...!')
 
     async def on_resumed(self):
-        print('resumed...')
+        logging.info("BOT RESUMED")
     
     async def close(self):
-        await super().close()
-        await self.session.close()
         self._task.cancel()
+        await PostgreDB(PostgreeDB_Config.URI).close(self.postgre_db)
+        await self.session.close()
+        await super().close()
         print(f'BOT is offline')
+        logging.info("BOT IS OFFLINE")
     
     def run(self):
         try:

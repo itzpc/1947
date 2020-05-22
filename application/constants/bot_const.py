@@ -4,7 +4,8 @@ class BotImage():
     TH11= "https://cdn.discordapp.com/attachments/703262862612758652/708041799033290773/TH11.png"
     TH12= "https://cdn.discordapp.com/attachments/703262862612758652/708041800773927042/TH12.png"
     TH13= "https://cdn.discordapp.com/attachments/703262862612758652/708041810747850792/TH13.png"
-    
+    LINK_CLAN_IMAGE_LOC="/images/link_clan.jpg"
+    LINK_CLAN_IMAGE_NAME="link_clan.jpg"
 class BotVariables():
     kwargs_create_message={"if_embed" : False,"title_url": False,"set_thumbnail_url":False,"set_image_url":False,"footer_icon_url":False,"author_icon_url":False}
     
@@ -21,3 +22,5 @@ class BotEmoji():
     STAR_RED_NEW = "<:star_red_new:708603017569763412>"
     RED_DOWN = "<:red_down:708626874103758858>"  
     GREEN_UP = "<:green_up:708627041389510666>"
+    LOADING = "<a:loading:712366754147598440>"
+    WARNING="⚠️"

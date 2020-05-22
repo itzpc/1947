@@ -1,3 +1,4 @@
+import coc
 from application.statics.create_message import CreateMessage
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
@@ -137,3 +138,15 @@ class PrepMessage():
         embed_args["embed_colour"]=colour
         create_msg = CreateMessage(content,True)
         return create_msg.create_message(**embed_args)
+
+    def prepare_clan_link_message(self,clan):
+        embed_args = dict()
+        embed_args["embed_title"]=f"{clan.name} - ({clan.tag})"
+        description = f"Level : {clan.level} \n"
+        description += f"Location : {clan.location} \n"
+        description += f"Win Streak : {clan.war_win_streak} \n"
+        embed_args["embed_description"]=description
+        embed_args["set_thumbnail_url"]=clan.badge.url
+        content = ""
+        content, embed=CreateMessage(content,True).create_message(**embed_args)
+        return embed
