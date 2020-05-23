@@ -35,6 +35,7 @@ class Admin(commands.Cog):
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
 
     async def clan_link_check(self,ctx,clan,msg):
+        logging.info(f"admin.py - clan_link_check {clan.description}")
         if clan.description[-3:]=="EKA":
             embed = discord.Embed(description=f"{Emoji.GREEN_TICK} Clan Linking Success !")
             await msg.edit(embed=embed)

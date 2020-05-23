@@ -125,6 +125,7 @@ class DbUtlis():
                 id = ''.join(map(str, id)) # id is asyncpg.Record Type
                 value = (guilid,int(id))
                 result = await self.conn.fetchrow(sql,*value)
+                logging.info(f"db_utlis.py - add_new_clan_tag  global clan tag return {int(id)} ressult {result}")
                 if result:
                     logging.info(f"db_utlis.py - add_new_clan_tag({guilid},{clantag}) - Clan already present")
                 else:
