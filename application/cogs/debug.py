@@ -2,7 +2,9 @@ import coc
 import discord
 from discord.ext import commands
 from application.constants.emoji import Emoji
-
+from application.constants.guildsupport import GuildSupport
+import traceback
+import logging
 class Debug(commands.Cog):
     """Cog for various events and debugging"""
     def __init__(self, bot):
@@ -18,6 +20,10 @@ class Debug(commands.Cog):
 
     async def initialize(self):
         await self.bot.wait_until_ready()
+    
+    @property
+    def error_channel(self):
+        return self.bot.get_channel(GuildSupport.ERROR_LOGS_CHANNEL_ID)
     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -49,7 +55,14 @@ class Debug(commands.Cog):
         elif isinstance(error,commands.errors.MaxConcurrencyReached):
             await ctx.send(f" One instance of this command is running. You need to wait till it completes")
         else:
-            await ctx.send(f" Else : {error}")
+            await ctx.send(f" You broke something, that I need to fix. Please report this here {GuildSupport.SERVER_INVITE_URL}")
+            log = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+            for page in pagify(log, page_length=1024):
+                    embed.add_field(name='\u200b',
+                                    value=f'```py\n{page}\n```')
+                embed.add_field(name="Information", value=field)
+                await self.error_channel.send(embed=embed)
+            logging.error(log)
         await ctx.message.add_reaction(Emoji.GREEN_CROSS)
 
     async def on_event_error(self,ctx,error):

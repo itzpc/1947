@@ -39,11 +39,12 @@ class Admin(commands.Cog):
     async def clan_link_check(self,ctx,clan,msg):
         logging.info(f"admin.py - clan_link_check {clan.description}")
         if clan.description[-3:]=="EKA":
-            embed = discord.Embed(description=f"{Emoji.GREEN_TICK} Clan Linking Success !")
+            embed = discord.Embed(description=f"{Emoji.GREEN_TICK} Clan Linking is successful !")
             await msg.edit(embed=embed)
             await self.db.add_new_clan_tag(ctx.guild.id,clan.tag)
             embed = PrepMessage().prepare_clan_link_message(clan)
-            await ctx.send(embed=embed)
+            content = (f" Please report {GuildSupport.SERVER_INVITE_URL} for the BOT to start posting updates, immediately. **Since the bot is in beta stage**, war logs are not posted for newly added clans immediately.  ")
+            await ctx.send(content=content,embed=embed)
             await ctx.message.add_reaction(Emoji.GREEN_TICK)
             return 
         else:
@@ -54,11 +55,12 @@ class Admin(commands.Cog):
     @setup.command( name = "Clan",case_insensitive=True)
     async def clan(self, ctx, clantag:str):
         """ Links a clash of clans to your discord server """
-        embed = discord.Embed(description=f"{BotEmoji.LOADING} Clan Linking is in Progress. Please wait..")
-        msg= await ctx.send(embed=embed)
+        
         content= "Add `EKA` to last of your clan description as shown in the figure"
         file = discord.File(os.path.join(os.getcwd()+BotImage.LINK_CLAN_IMAGE_LOC),filename=BotImage.LINK_CLAN_IMAGE_NAME)
         await ctx.send(content=content,file=file)
+        embed = discord.Embed(description=f"{BotEmoji.LOADING} Clan Linking is in Progress. Please wait..")
+        msg= await ctx.send(embed=embed)
         try:
             clantag = coc.utils.correct_tag(clantag)
             clan = await self.bot.coc.get_clan(clantag)

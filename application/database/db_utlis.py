@@ -50,6 +50,54 @@ class DbUtlis():
         except:
             logging.error(traceback.format_exc())
 
+    async def insert_into_member_on_guild_table(self,guildId,memberId):
+        try:
+            sql = "INSERT INTO GUILD(guild_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM guild WHERE guild_id=($1));"
+            value=(guildId)
+            await self.conn.execute(sql,value)
+            sql = "INSERT INTO member(member_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM member WHERE member_id=($1));"
+            value = (memberId)
+            await self.conn.execute(sql,value)
+            sql = "SELECT left_on FROM members_on_guild where guild_id=($1) and member_id = ($2);"
+            value=(guildId,memberId)
+            result = await self.conn.fetchrow(sql,*value)
+            if result:
+                if result['left_on']:
+                    sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($2);"
+                    value=(None,guildId,memberId)
+                    await self.conn.execute(sql,*value)
+                    logging.info(f"db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) Member has rejoined guild")
+            else:
+                sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
+                await self.conn.execute(sql,value)
+                logging.info(f"db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) New Member has joined guild")
+        except:
+            logging.error(traceback.format_exc())
+            
+    async def delete_from_member_on_guild_table(self,guildId,memberId):
+        try:
+            sql = "SELECT left_on FROM members_on_guild where guild_id=($1) and member_id = ($2);"
+            value=(guildId,memberId)
+            result = await self.conn.fetchrow(sql,*value)
+            if result:
+                if result['left_on']:
+                    logging.error(f"db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has already left guild")
+                else:
+                    sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($2);"
+                    value=(datetime.utcnow(),guildId,memberId)
+                    await self.conn.execute(sql,*value)
+                    logging.info(f"db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild")
+                    
+            else:
+                sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
+                await self.conn.execute(sql,*value)
+                sql = "INSERT INTO member(member_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM member WHERE member_id=($1));"
+                value = (memberId)
+                await self.conn.execute(sql,value)
+                logging.error(f"db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild. members_on_guild table new entry added")
+        except :
+            logging.error(traceback.format_exc())
+
     async def get_prefix_of_guild(self,id):
         try:
             guild_prefix = list()

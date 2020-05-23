@@ -15,6 +15,7 @@ from application.constants.guild1947 import Guild1947
 from application.cogs.utlis.context import Context
 from application.database.postgre_db import PostgreDB
 from application.database.db_utlis import DbUtlis
+from application.utlis.bot_actions import BotActions
 
 class BotInitialization():
 
@@ -93,17 +94,20 @@ class Bot1947(commands.AutoShardedBot):
     async def on_ready(self):
         logging.info("BOT IS ONLINE")
         print(f'Ready...!')
+        await BotActions(super()).online_message()
 
     async def on_resumed(self):
         logging.info("BOT RESUMED")
     
     async def close(self):
+        await BotActions(super()).offline_message()
         self._task.cancel()
         await PostgreDB(PostgreeDB_Config.URI).close(self.postgre_db)
         await self.session.close()
         await super().close()
         print(f'BOT is offline')
         logging.info("BOT IS OFFLINE")
+        
     
     def run(self):
         try:
