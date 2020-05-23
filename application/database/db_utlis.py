@@ -60,6 +60,22 @@ class DbUtlis():
         except:
             logging.error(traceback.format_exc())
 
+    async def get_default_clan_of_guild(self,id):
+        try:
+            clan_tag = None
+            sql = "select clan_tag from (select * from guild,global_clan_list where guild.default_clan_id=global_clan_list.id) AS guildclans where guildclans.guild_id= ($1);"
+            value = (id)
+            result = await self.conn.fetchrow(sql,value)
+            if result:
+                clan_tag = result['clan_tag']
+                logging.info(f"db_utlis.py - get_default_clan_of_guild({id}) was found{clan_tag}")
+                return str(clan_tag)
+            else:
+                logging.info(f"db_utlis.py - get_default_clan_of_guild({id}) was not found{clan_tag}")
+            return None
+        except:
+            logging.error(traceback.format_exc())
+
     async def add_default_channel(self,guildId,channelId):
         try:
             sql = "UPDATE guild SET default_channel =($1) where guild_id=($2);"
@@ -132,6 +148,10 @@ class DbUtlis():
                     sql = "INSERT INTO clans_on_guild(guild_id,clan_id)VALUES ($1,$2);"
                     await self.conn.execute(sql,*value)
                     logging.info(f"db_utlis.py - add_new_clan_tag({guilid},{clantag}) - New clan registered.")
+                    sql = "UPDATE guild SET default_clan_id =($1) where guild_id=($2);"
+                    value = (int(id),guilid)
+                    await self.conn.execute(sql,*value)
+                    logging.info(f"db_utlis.py - add_new_clan_tag({guilid},{clantag}) - Default clan added.")
                     return    
         except:
             logging.error(traceback.format_exc())
@@ -203,6 +223,23 @@ class DbUtlis():
             logging.info(f"db_utlis.py - get_dict_of_guild_war_log_channel_of_clan({clantag}) - return:{clan_report_dict_list}")
             return clan_report_dict_list
             
+        except:
+            logging.error(traceback.format_exc())
+
+    async def get_clans_on_guild_information(self,guilid):
+        try:
+            clan_list=list()
+            sql = "select * from (select * from clans_on_guild,global_clan_list where clans_on_guild.clan_id=global_clan_list.id) AS guildclans where guildclans.guild_id=($1)";
+            value=(guilid)
+            result = await self.conn.fetch(sql,value)
+            
+            if result:
+                
+                logging.info(f"db_utlis.py - get_clans_on_guild_information({guilid}) - return:{result}")
+                return result
+            else:
+                logging.info(f"db_utlis.py - get_clans_on_guild_information({guilid}) - return: False - {None}")
+                return False
         except:
             logging.error(traceback.format_exc())
 

@@ -27,6 +27,7 @@ class Admin(commands.Cog):
         """@1947 setup #mentionChannel"""
         await ctx.send("Channel")'''
 
+    @commands.max_concurrency(1)
     @commands.has_permissions(administrator=True)
     @commands.group(invoke_without_command=True, name = "Setup",case_insensitive=True)
     async def setup(self, ctx, channel:discord.TextChannel):

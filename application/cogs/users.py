@@ -7,16 +7,44 @@ from application.constants.guild1947 import Guild1947Clan
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 from application.statics.create_message import CreateMessage
+from application.database.db_utlis import DbUtlis
+
 class Users(commands.Cog):
     """Everyone can use this commands"""
     def __init__(self, bot):
         self.bot = bot
+        self.task = self.bot.loop.create_task(self.initialize())
+        self.db = DbUtlis(self.bot.postgre_db)
+    def cog_unload(self):
+        self.task.cancel()
+        self.bot.coc.remove_events(self.on_event_error)
 
-    @commands.max_concurrency(1)
+    async def initialize(self):
+        await self.bot.wait_until_ready()
+
+    @staticmethod
+    def get_list_of_war_log_channel_from_list_of_record(records):
+        war_log_dict_list=list()
+        for record in records:
+            war_log_dict_list.append({'clantag':record['clan_tag'],'warlog':record['war_log_channel']})
+        return war_log_dict_list
+
+    @staticmethod
+    def get_clan_tag_in_current_channel(current_channel,list_of_channel_dic):
+        logging.info(f"users.py - get_clan_tag_in_current_channel({current_channel},{list_of_channel_dic})")
+        clan_tag = None
+        if list_of_channel_dic:
+            for record in list_of_channel_dic:
+                if current_channel in record.values():
+                    clan_tag = record['clantag']
+                    return clan_tag
+        return clan_tag
+
     @commands.command(name="Clan", aliases=["c","C","clan"])
     async def search_clan(self, ctx, clan_tag):
         """Search a clan by clan tag"""
         try:
+            
             clan_tag = coc.utils.correct_tag(clan_tag)
             clan = await self.bot.coc.get_clan(clan_tag)
             content = f"The clan name for {clan_tag} is {clan.name}.\n"
@@ -36,20 +64,31 @@ class Users(commands.Cog):
 
     @commands.max_concurrency(1)
     @commands.command(name="Stats", aliases=["warstatus","Status","stats","status"],case_insensitive=True)
-    async def war_status(self, ctx, clan_tag=None):
+    async def war_status(self, ctx):
         "Get the current war status of your clan"
-        if clan_tag is None:
-            clan_tag = Guild1947Clan.CLAN_TAG
-        clan_tag = coc.utils.correct_tag(clan_tag)
-        war = await self.bot.coc.get_current_war(clan_tag)
-        if war:
-            clan_name = war.clan.name
-            opponent_name = war.opponent.name
-            content = f"`{clan_name}` VS `{opponent_name}`\n Current war state is {war.state}\n"
-            content += f"{war.clan.stars}/{war.clan.max_stars} VS {war.opponent.stars}/{war.opponent.max_stars} "
+        clan_tag = None
+        result= await self.db.get_clans_on_guild_information(ctx.guild.id)
+        if result:
+            list_channels = self.get_list_of_war_log_channel_from_list_of_record(result)
+            clan_tag = self.get_clan_tag_in_current_channel(ctx.channel.id,list_channels)
+            if clan_tag is None:
+                clan_tag = await self.db.get_default_clan_of_guild(ctx.guild.id)
         else:
-            content = " No wars found !"
-        
+            clan_tag = await self.db.get_default_clan_of_guild(ctx.guild.id)
+
+        if clan_tag:
+            clan_tag = coc.utils.correct_tag(clan_tag)
+            war = await self.bot.coc.get_current_war(clan_tag)
+            if war:
+                clan_name = war.clan.name
+                opponent_name = war.opponent.name
+                content = f"`{clan_name}` VS `{opponent_name}`\n Current war state is {war.state}\n"
+                content += f"{war.clan.stars}/{war.clan.max_stars} VS {war.opponent.stars}/{war.opponent.max_stars} "
+            else:
+                content = " No wars found !"
+        else:
+            content="No Default Clans linked. Try `help setup clan` First"
+            
         await ctx.send(content)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
     
