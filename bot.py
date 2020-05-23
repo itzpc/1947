@@ -53,6 +53,7 @@ class BotInitialization():
 class Bot1947(commands.AutoShardedBot):
 
     def __init__(self,coc_client,connection):
+        
         self.bot_init = BotInitialization()
         self.postgre_db=connection
         self.coc = coc_client
@@ -62,6 +63,7 @@ class Bot1947(commands.AutoShardedBot):
         self.guild_id = DiscordConfig.ALLOWED_GUILDS
         self._task = self.loop.create_task(self.initialize())
         self.activity = discord.Activity(type=discord.ActivityType.listening, name='1947')
+        self.case_insensitive = True
         try:
             for extension in DiscordConfig.initial_extensions:
                 self.load_extension(extension)

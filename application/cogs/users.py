@@ -7,15 +7,15 @@ from application.constants.guild1947 import Guild1947Clan
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 from application.statics.create_message import CreateMessage
-class General(commands.Cog):
-    """Description of what this file does"""
+class Users(commands.Cog):
+    """Everyone can use this commands"""
     def __init__(self, bot):
         self.bot = bot
 
     @commands.max_concurrency(1)
-    @commands.command(name="search_clan", aliases=["Search_clan","Searchclan","sc","Sc"])
+    @commands.command(name="Clan", aliases=["c","C","clan"])
     async def search_clan(self, ctx, clan_tag):
-        """Gets clan information from API and displays it for user"""
+        """Search a clan by clan tag"""
         try:
             clan_tag = coc.utils.correct_tag(clan_tag)
             clan = await self.bot.coc.get_clan(clan_tag)
@@ -35,8 +35,9 @@ class General(commands.Cog):
             logging.error(f"clan_search {Ex} ")
 
     @commands.max_concurrency(1)
-    @commands.command(name="war_status", aliases=["warstatus","status","Status","Stats","stats"])
+    @commands.command(name="Stats", aliases=["warstatus","Status","stats","status"],case_insensitive=True)
     async def war_status(self, ctx, clan_tag=None):
+        "Get the current war status of your clan"
         if clan_tag is None:
             clan_tag = Guild1947Clan.CLAN_TAG
         clan_tag = coc.utils.correct_tag(clan_tag)
@@ -91,9 +92,9 @@ class General(commands.Cog):
         return message.create_message(**args)
 
     @commands.max_concurrency(1)
-    @commands.command(name="search_player", aliases=["Search","search","Sp","sp","Search_player"])
+    @commands.command(name="Player", aliases=["P","player","p"],case_insensitive=True)
     async def search_player(self, ctx, player_tag):
-        """ 1947 link #playertag """
+        """ Search a Clash of Clans Player by Player ID """
         if player_tag is None :
             await ctx.send(" ` 1947 link #playertag ` - You are missing a player tag to link")
         else:
@@ -141,9 +142,9 @@ class General(commands.Cog):
                 return False, found
 
     @commands.max_concurrency(1)
-    @commands.command(name="claim_player", aliases=["Claim","claim","Cv","cv","Claim_village"])
+    @commands.command(name="Claim", aliases=["claim","Cv","cv","Claim_village"])
     async def claim_village(self, ctx, player_tag):
-        """ 1947 claim #playertag """
+        """ Link a Clash of Clan profile to Discord ID """
         if player_tag is None :
             await ctx.send(" ` 1947 claim #playertag ` - You are missing a player tag to claim village")
         else:
@@ -178,4 +179,4 @@ class General(commands.Cog):
             # except Exception as Ex:
             #     await ctx.send(f" Player not found with player_tag : {player_tag} \n ```{Ex}```")
 def setup(bot):
-    bot.add_cog(General(bot))
+    bot.add_cog(Users(bot))

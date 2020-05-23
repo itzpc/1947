@@ -88,6 +88,42 @@ class Owner(commands.Cog):
                 self._last_result = ret
                 await ctx.send(f'```py\n{value}{ret}\n```')
 
+    @commands.is_owner()
+    @commands.command(aliases=['join'])
+    async def invite(self, ctx):
+        """BOT Joins a server."""
+        perms = discord.Permissions.none()
+        # perms.administrator = True
+        perms.read_messages = True
+        perms.external_emojis = True
+        perms.send_messages = True
+        perms.manage_roles = True
+        perms.manage_channels = True
+        perms.ban_members = True
+        perms.kick_members = True
+        perms.manage_messages = True
+        perms.embed_links = True
+        perms.read_message_history = True
+        perms.attach_files = True
+        perms.add_reactions = True
+        perms.manage_guild = True
+        #perms.change_nickname = True
+        perms.create_instant_invite = True
+        perms.manage_guild = True
+        #perms.view_audit_log = True
+        perms.stream = True
+        perms.manage_webhooks = True
+        perms.manage_nicknames = True
+        perms.connect = True
+        perms.speak = True
+        perms.mute_members = True
+       # perms.deafen_members = True
+       # perms.move_members = True
+       # perms.use_voice_activation = True
+
+        await ctx.author.send(f'<{discord.utils.oauth_url(self.bot.user.id, perms)}>')
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
+
 
 def setup(bot):
     bot.add_cog(Owner(bot))

@@ -9,7 +9,7 @@ from application.database.db_utlis import DbUtlis
 from application.constants.bot_const import BotImage,BotEmoji
 from application.statics.prepare_message import PrepMessage
 class Admin(commands.Cog):
-    """Cog for various events and debugging"""
+    """You need administration premission to use this command"""
     def __init__(self, bot):
         self.bot = bot
         self.task = self.bot.loop.create_task(self.initialize())
@@ -28,8 +28,9 @@ class Admin(commands.Cog):
         await ctx.send("Channel")'''
 
     @commands.has_permissions(administrator=True)
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, name = "Setup",case_insensitive=True)
     async def setup(self, ctx, channel:discord.TextChannel):
+        """ Type `@1947 setup #mentionchannel` This will setup #channel as default channel for bot, You will never have to mention bot again in this channel. Type `help setup` to know more setup  """
         await self.db.add_default_channel(ctx.guild.id,channel.id)
         await channel.send(f"{channel.mention} has been setup as default channel for 1947 bot")
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
@@ -49,8 +50,9 @@ class Admin(commands.Cog):
             clan_ = await self.bot.coc.get_clan(clan.tag)
             await self.clan_link_check(ctx,clan_,msg)
 
-    @setup.command()
+    @setup.command( name = "Clan",case_insensitive=True)
     async def clan(self, ctx, clantag:str):
+        """ Links a clash of clans to your discord server """
         embed = discord.Embed(description=f"{BotEmoji.LOADING} Clan Linking is in Progress. Please wait..")
         msg= await ctx.send(embed=embed)
         content= "Add `EKA` to last of your clan description as shown in the figure"
@@ -70,8 +72,9 @@ class Admin(commands.Cog):
             await msg.edit(embed=embed)
             await ctx.send(f" Waited too long. Try again after few minutes. It takes 10 mins for COC to update")
 
-    @setup.command()
+    @setup.command( name = "warlog",case_insensitive=True)
     async def war_log(self, ctx,clantag:str, channel:discord.TextChannel,):
+        """Setup a channel to announce war logs """
         clantag = coc.utils.correct_tag(clantag)
         try:
             clantag = coc.utils.correct_tag(clantag)
