@@ -2,12 +2,15 @@ import coc
 import logging
 import asyncio
 import gspread
+import discord
 from discord.ext import commands
 from application.constants.guild1947 import Guild1947Clan
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 from application.statics.create_message import CreateMessage
 from application.database.db_utlis import DbUtlis
+from datetime import datetime,date
+from .utlis.paginator import TextPages
 
 class Users(commands.Cog):
     """Everyone can use this commands"""
@@ -147,38 +150,46 @@ class Users(commands.Cog):
             except Exception as Ex:
                 await ctx.send(f" Player not found with player_tag : {player_tag} \n ```{Ex}```")
 
-    def insert_into_google_sheet(self,sheet,insert_row,memberObj,player):
-        try:
-            find_result = sheet.find(player.tag)
-            if int(sheet.cell(find_result.row,1).value) != memberObj.id :
-                return True, sheet.row_values(find_result.row)
-        except gspread.CellNotFound:
-            pass
-            
-        data = sheet.get_all_records()
-        found = False
-        pos = 2
-        position_row = len(data)+2
-        for row in data:
-            if str(row.get("discord_id"))== str(memberObj.id):
-                found = row
-                position_row = pos
-            pos +=1
-        if found is False:
-            sheet.insert_row(insert_row,position_row)
-            return True , insert_row
+    @commands.command(aliases=['join'])
+    async def invite(self, ctx):
+        """BOT Joins a server."""
+        if ctx.guild.id == GuildSupport.SERVER_ID:
+            perms = discord.Permissions.none()
+            # perms.administrator = True
+            perms.read_messages = True
+            perms.external_emojis = True
+            perms.send_messages = True
+            perms.manage_roles = True
+            perms.manage_channels = True
+            perms.ban_members = True
+            perms.kick_members = True
+            perms.manage_messages = True
+            perms.embed_links = True
+            perms.read_message_history = True
+            perms.attach_files = True
+            perms.add_reactions = True
+            perms.manage_guild = True
+            #perms.change_nickname = True
+            perms.create_instant_invite = True
+            perms.manage_guild = True
+            #perms.view_audit_log = True
+            perms.stream = True
+            perms.manage_webhooks = True
+            perms.manage_nicknames = True
+            perms.connect = True
+            perms.speak = True
+            perms.mute_members = True
+            # perms.deafen_members = True
+            # perms.move_members = True
+            # perms.use_voice_activation = True
+            try:
+                await ctx.author.send(f'<{discord.utils.oauth_url(self.bot.user.id, perms)}>')
+            except:
+                await ctx.send(" Need to enable DM to get the invite link")
+            finally:
+                await ctx.message.add_reaction(Emoji.GREEN_TICK)
         else:
-            if player.tag in found.values():
-                return True,found
-            else:
-                position_coloumn=1
-                for k,v in found.items():
-                    if v == "":
-                        found[k]=player.tag
-                        sheet.update_cell(position_row,position_coloumn, player.tag)
-                        return True , found
-                    position_coloumn +=1
-                return False, found
+            ctx.send(f"You need to join support server first to invite bot. {GuildSupport.SERVER_INVITE_URL}")
 
     @commands.max_concurrency(1)
     @commands.command(name="Claim", aliases=["claim","Cv","cv","Claim_village"])
@@ -191,31 +202,82 @@ class Users(commands.Cog):
             player_tag = coc.utils.correct_tag(player_tag)
             #try:
             player = await self.bot.coc.get_player(player_tag)
-            '''
-            insert_row = [str(memberObj.id),player.tag]
-            result,row = self.insert_into_google_sheet(sheet,insert_row,memberObj,player)
-            content=str(result)+str(row) 
-            if result:
-                if isinstance(row,dict):
-                    list_of_tag = list(row.values())
-                    if int(row['discord_id'])==memberObj.id:
-                        content=f"` {player.name} - ({player.tag})  TH {player.town_hall} ` **is claimed by** {memberObj.mention}   Other linked villages are {list_of_tag[1:]} "
-                else:
-                    if int(row[0])==memberObj.id :
-                        content=f"` {player.name} - ({player.tag})  TH {player.town_hall} ` **is claimed by** {memberObj.mention}   "
-                    else:
-                        try:
-                            memberObj=self.bot.get_guild(ctx.guild.id).get_member(int(row[0]))
-                            content=f"` {player.name} - ({player.tag})  TH {player.town_hall} ` **is claimed by** ` {memberObj.display_name} `   "
-                        except:
-                            #claim member not in guild
-                            content=f"{player.name} **is claimed by** user not on this server"
-            else:
-                list_of_tag = list(row.values())
-                content=f"Sorry, You can claim maximum of 5 villages only.  Other linked villages are {list_of_tag[1:]}"'''
 
             await ctx.send(content=player)
             # except Exception as Ex:
             #     await ctx.send(f" Player not found with player_tag : {player_tag} \n ```{Ex}```")
+    @commands.group(invoke_without_command=True, name = "Birthday",case_insensitive=True,aliases=['birthday'])
+    async def birthday(self, ctx):
+        """ Birthday commands - help birthday """
+        title = "Birthday"
+        description = "Celebrate your birthday with friends using the following commands"
+        embed = discord.Embed(title=title,description=description,color=discord.Color.dark_magenta ()) 
+        embed.add_field(name="Birthday setup #mentionAnnouncement", value=f"Setup birthday announcemnet")
+        embed.add_field(name="Birthday add DD-MM-YYYY", value=f"Adds your birthday")
+        embed.add_field(name="Birthday list", value=f"list out registered birthdays")
+        content = " Type `help birthday` to know more"
+        ctx.send(content=content,embed=embed)
+    
+
+    @birthday.command( name = "setup",case_insensitive=True)
+    @commands.has_permissions(administrator=True)
+    async def setup_birthday(self, ctx, channel:discord.TextChannel):
+        """ Setup birthday announcemnet channel to announce birthdays """
+        pass
+
+    @birthday.command( name = "add",case_insensitive=True)
+    async def add_birthday(self, ctx, message:str):
+        """ Add your Birthday to your Discord Profile """
+        try:
+
+            if message is None:
+                await ctx.send("Oh ! You forget to give me a date in DD-MM-YYYY format")
+                return
+            msg = message.strip()
+            dob = datetime.strptime(msg, "%d-%m-%Y")
+            today = date.today()
+            result = await self.db.update_birthday(ctx.guild.id,ctx.message.author.id,dob)
+            if result is True:
+                await ctx.message.add_reaction(Emoji.GREEN_TICK)
+                if (dob.month == today.month) and (dob.day == today.day):
+                    await ctx.send("HBD")
+                    #await Birthday(self.bot,self.bot.db_utlis,ctx.message.author).wish_birthday()
+            else:
+                await ctx.message.add_reaction(Emoji.X)
+
+        except Exception as ex:
+            await ctx.send(f"Oh ! Provide date in DD-MM-YYYY format only \n {ex}")
+        
+    
+    @birthday.command( name = "list",case_insensitive=True)
+    async def list_birthday(self, ctx):
+        """ List out the birthdays of server members"""
+        
+        try:
+            result=await self.db.get_member_birthday_list_on_guild(ctx.guild.id)
+            text = str()
+            today = date.today()
+            count=1
+            for record in result:
+                try:
+                    userObj=self.bot.get_user(record['member_id'])
+                    if userObj:
+                        if (record['dob'].month == today.month) and (record['dob'].day == today.day):
+                            text += f"{count}. {Emoji.BIRTHDAY} {userObj.display_name} - {record['dob']} \n "
+                        else:
+                            text += f"{count}. {userObj.display_name} - {record['dob']} \n"
+                        count+=1
+                except Exception as Ex:
+                    logging.info("users.py : list_bday : Exception {Ex}")
+            if text:
+                p = TextPages(ctx, text=text ,max_size=500)
+                await p.paginate()
+            else:
+                await ctx.send("No birthdays added `birthday add` to add birthday")
+            await ctx.message.add_reaction(Emoji.GREEN_TICK)
+        except Exception as Ex:
+            logging.error("ERROR : users.py : list_bday :".format(Ex))
+        
+
 def setup(bot):
     bot.add_cog(Users(bot))

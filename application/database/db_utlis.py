@@ -3,7 +3,7 @@ import asyncio
 import asyncpg
 import logging
 import traceback
-from datetime import datetime
+from datetime import datetime,date
 
 class DbUtlis():
     def __init__(self,connection):
@@ -69,7 +69,7 @@ class DbUtlis():
                     logging.info(f"db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) Member has rejoined guild")
             else:
                 sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
-                await self.conn.execute(sql,value)
+                await self.conn.execute(sql,*value)
                 logging.info(f"db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) New Member has joined guild")
         except:
             logging.error(traceback.format_exc())
@@ -290,6 +290,109 @@ class DbUtlis():
                 return False
         except:
             logging.error(traceback.format_exc())
+
+    async def insert_into_members_on_guild(self,guildId,memberId):
+        try:
+            sql = "select * from members_on_guild where guild_id = ($1) and member_id = ($2);"
+            value = (guildId,memberId)
+            result = await self.conn.fetch(sql,*value)
+            if result:
+                logging.info(f"db_utlis.py - insert_into_members_on_guild({guildId},{memberId}) - already data is present")
+            else:
+                sql = "INSERT INTOmembers_on_guild(guild_id,member_id) VALUES ($1,$2);"
+                value = (guildId,memberId)
+                await self.conn.execute(sql,*value)
+                logging.info(f"db_utlis.py - insert_into_members_on_guild({guildId},{memberId}) - member inserted into members_on_guild")
+            return
+        except:
+            logging.error(traceback.format_exc())
+
+    async def update_birthday(self,guildId,memberId,dob):
+        try:
+            await self.insert_into_member_on_guild_table(guildId,memberId)
+            sql = "INSERT INTO member(member_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM member WHERE member_id=($1));"
+            value = (memberId)
+            await self.conn.execute(sql,value)
+            sql = "UPDATE member set dob =($1) where member_id = ($2)"
+            value=(dob,memberId)
+            result = await self.conn.execute(sql,*value)
+            
+            if result:
+                
+                logging.info(f"db_utlis.py - update_birthday({memberId},{dob}) - return:True")
+                return True
+            else:
+                logging.error(f"db_utlis.py - update_birthday({memberId},{dob}) - return:False")
+                return False
+        except:
+            logging.error(traceback.format_exc())
+
+    async def get_members_on_guild(self,guildId):
+        try:
+            list_member_dic = list()
+            sql = "select * from members_on_guild join member on members_on_guild.member_id=member.member_id where members_on_guild.guild_id =($1)  ;"
+            value = (guildId)
+            result = await self.conn.fetch(sql,value)
+            if result:
+                for record in result:
+                    list_member_dic.append({'member_id':record['member_id'],'dob':record['dob'],'global_xp':record['xp'],'guild_xp':record['guild_xp']})
+            logging.info(f"db_utlis.py - get_members_on_guild({guildId}) - return:{list_member_dic}")
+            return list_member_dic
+        except:
+            logging.info(f"db_utlis.py - get_members_on_guild({guildId}) - return: ERROR")
+            logging.error(traceback.format_exc())
+            return None
+
+    async def get_member_list_birthday_today_on_guild(self,guildId):
+        try:
+            list_member=list()
+            list_member_dic = await self.get_members_on_guild(guildId)
+            today =date.today()
+            if list_member_dic:
+                for member in list_member_dic:
+                    if member['dob']:
+                        dob = member['dob']
+                        if (dob.month == today.month) and (dob.day == today.day):
+                            list_member.append(member['member_id'])
+            if list_member:
+                logging.info(f"db_utlis.py - get_member_list_birthday_today_on_guild({guildId}) return {list_member}")
+                return list_member
+            else:
+                logging.info(f"db_utlis.py - get_member_list_birthday_today_on_guild({guildId}) return: False")
+                return False
+        except:
+            logging.error(traceback.format_exc())
+            return False
+    async def get_member_birthday_list_on_guild(self,guildId):
+        try:
+            list_member_dic_birthday=list()
+            list_member_dic = await self.get_members_on_guild(guildId)
+            if list_member_dic:
+                for member in list_member_dic:
+                    if member['dob']:
+                        list_member_dic_birthday.append({'member_id':member['member_id'],'dob':member['dob']})
+            if list_member_dic_birthday:
+                logging.info(f"db_utlis.py - get_member_birthday_list_on_guild({guildId}) return {list_member_dic_birthday}")
+                return list_member_dic_birthday
+            else:
+                logging.info(f"db_utlis.py - get_member_birthday_list_on_guild({guildId}) return: False")
+                return False
+        except:
+            logging.error(traceback.format_exc())
+            return False
+    add_bday_announce_channel
+    async def add_bday_announce_channel(self,guilid,channelid):
+        try:
+            
+            sql="UPDATE clans_on_guild SET war_log_channel = $1 FROM global_clan_list WHERE clans_on_guild.clan_id = global_clan_list.id AND clans_on_guild.guild_id=$2 and global_clan_list.clan_tag=$3"
+            value=(channelid,guilid,clantag)
+            await self.conn.execute(sql,*value)
+            logging.info(f"db_utlis.py - add_bday_announce_channel({guilid},{clantag},{channelid}) - return: True")
+            return True
+            
+        except:
+            logging.error(traceback.format_exc())
+            
 
 
     '''

@@ -24,3 +24,7 @@ class BotEmoji():
     GREEN_UP = "<:green_up:708627041389510666>"
     LOADING = "<a:loading:712366754147598440>"
     WARNING="⚠️"
+
+class BotFiles():
+    LOG_FILE_NAME='log.txt'
+    LOG_FILE_LOC = '/files/log.txt'

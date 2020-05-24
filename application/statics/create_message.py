@@ -57,7 +57,7 @@ class Message():
             return self.content,None
 
 class CreateMessage():
-    def __init__(self,content, is_embed=False):
+    def __init__(self,content=None, is_embed=False):
         self.is_embed = is_embed
         if content is None:
             content = ""
@@ -91,7 +91,7 @@ class CreateMessage():
         elif author_url:
             embed.set_author(name=author_name, url=author_url)
         elif author_icon_url:
-            embed.set_author(name=author_name, icon_url=author_url)
+            embed.set_author(name=author_name, icon_url=author_icon_url)
         else:
             embed.set_author(name=author_name)
         embed.set_footer(text=self.footer_text, icon_url=self.footer_icon_url)

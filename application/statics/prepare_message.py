@@ -1,7 +1,9 @@
 import coc
+import discord
 from application.statics.create_message import CreateMessage
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
+
 class PrepMessage():
     
     @staticmethod
@@ -150,3 +152,14 @@ class PrepMessage():
         content = ""
         content, embed=CreateMessage(content,True).create_message(**embed_args)
         return embed
+    def prepare_user_message_embed(self,member,description,title=None):
+        
+        embed_args = dict()
+        embed_args["author_name"]=member.display_name
+        embed_args["embed_title"]= title or ""
+        embed_args["embed_colour"]=0xFFFFFF
+        embed_args["author_icon_url"]=str(member.avatar_url)
+        embed_args["embed_description"]=description
+        content,embed=CreateMessage(is_embed=True).create_message(**embed_args)
+        return embed
+        

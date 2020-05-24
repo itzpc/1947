@@ -1,6 +1,7 @@
 import coc 
 import discord
 from discord.ext import commands
+from .utlis.chat_formatting import pagify
 from application.constants.emoji import Emoji
 from application.constants.guildsupport import GuildSupport
 import traceback
@@ -57,12 +58,15 @@ class Debug(commands.Cog):
         else:
             await ctx.send(f" You broke something, that I need to fix. Please report this here {GuildSupport.SERVER_INVITE_URL}")
             log = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+
+            embed = discord.Embed(title="An error occured",color=discord.Color.orange())
+            field = f"""Command: `{ctx.message.content}`Author: {ctx.author}[{ctx.author.id}]Server: {ctx.guild.name}[{ctx.guild.id}]"""
             for page in pagify(log, page_length=1024):
-                    embed.add_field(name='\u200b',
-                                    value=f'```py\n{page}\n```')
-                embed.add_field(name="Information", value=field)
-                await self.error_channel.send(embed=embed)
+                embed.add_field(name='\u200b',value=f'```py\n{page}\n```')
+            embed.add_field(name="Information", value=field)
+            await self.error_channel.send(embed=embed)
             logging.error(log)
+            raise error
         await ctx.message.add_reaction(Emoji.GREEN_CROSS)
 
     async def on_event_error(self,ctx,error):
