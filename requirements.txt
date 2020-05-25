@@ -8,4 +8,5 @@ gspread
 oauth2client
 pprint
 asyncpg
+pillow
 #pandas

@@ -121,6 +121,14 @@ class Admin(commands.Cog):
     async def birthday(self, ctx, channel:discord.TextChannel):
         """--> `setup birthday #mentionChannel` - Setup a channel to announce birthday wishes """
         result = await self.db.add_bday_announce_channel(ctx.guild.id,channel.id)
+        if result:
+            try:
+                await channel.send(f"{channel.mention} has been setup as birthday announcement channel")
+            except:
+                await ctx.send(f"Oh Oh, looks like I dont have access to {channel.mention}")
+            await ctx.message.add_reaction(Emoji.GREEN_TICK)
+        else:
+            await ctx.message.add_reaction(Emoji.GREEN_CROSS)
 
     @setup.command( name = "Recruitment",case_insensitive=True)
     async def recruitment(self, ctx):

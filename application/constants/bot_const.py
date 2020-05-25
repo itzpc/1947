@@ -6,7 +6,16 @@ class BotImage():
     TH13= "https://cdn.discordapp.com/attachments/703262862612758652/708041810747850792/TH13.png"
     LINK_CLAN_IMAGE_LOC="/images/link_clan.jpg"
     LINK_CLAN_IMAGE_NAME="link_clan.jpg"
+    BIRTHDAY_IMAGE = "/images/birthday.png"
+    BIRTHDAY_IMAGE_NAME="birthday.png"
+    BIRTHDAY_TEMP_IMAGE="/images/temp/temp.png"
+    BIRTHDAY_TEMP_IMAGE_NAME="temp.png"
+    BIRTHDAY_TEMP_IMAGE_LOC="/images/temp/"
+
+class BotFont():
+    PINEAPPLE_FONT = "/fonts/pineapple.ttf"
 class BotVariables():
+    BOT_ID=707282233958072371
     kwargs_create_message={"if_embed" : False,"title_url": False,"set_thumbnail_url":False,"set_image_url":False,"footer_icon_url":False,"author_icon_url":False}
     
     kwargs_embed = {"if_embed" : False, "content":None,"embed_title":None,"embed_description":None,"embed_colour":None, "embed_title_url":None, "title_timestamp":None, "set_image_url":None, "set_thumbnail_url":None, "author_name":None, "author_url":None, "author_icon_url":None, "footer_text":None, "footer_icon_url":None}

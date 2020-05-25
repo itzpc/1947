@@ -11,6 +11,7 @@ from application.statics.create_message import CreateMessage
 from application.database.db_utlis import DbUtlis
 from datetime import datetime,date
 from .utlis.paginator import TextPages
+from .utlis.birthday import Birthday
 
 class Users(commands.Cog):
     """Everyone can use this commands"""
@@ -206,28 +207,20 @@ class Users(commands.Cog):
             await ctx.send(content=player)
             # except Exception as Ex:
             #     await ctx.send(f" Player not found with player_tag : {player_tag} \n ```{Ex}```")
-    @commands.group(invoke_without_command=True, name = "Birthday",case_insensitive=True,aliases=['birthday'])
+    @commands.group(invoke_without_command=True, name = "Birthday",case_insensitive=True,aliases=['birthday','bday','Bday'])
     async def birthday(self, ctx):
         """ Birthday commands - help birthday """
         title = "Birthday"
         description = "Celebrate your birthday with friends using the following commands"
         embed = discord.Embed(title=title,description=description,color=discord.Color.dark_magenta ()) 
-        embed.add_field(name="Birthday setup #mentionAnnouncement", value=f"Setup birthday announcemnet")
-        embed.add_field(name="Birthday add DD-MM-YYYY", value=f"Adds your birthday")
-        embed.add_field(name="Birthday list", value=f"list out registered birthdays")
+        embed.add_field(name="birthday add DD-MM-YYYY", value=f"Adds your birthday", inline= False)
+        embed.add_field(name="birthday list", value=f"list out registered birthdays", inline= False)
         content = " Type `help birthday` to know more"
-        ctx.send(content=content,embed=embed)
-    
-
-    @birthday.command( name = "setup",case_insensitive=True)
-    @commands.has_permissions(administrator=True)
-    async def setup_birthday(self, ctx, channel:discord.TextChannel):
-        """ Setup birthday announcemnet channel to announce birthdays """
-        pass
+        await ctx.send(content=content,embed=embed)
 
     @birthday.command( name = "add",case_insensitive=True)
     async def add_birthday(self, ctx, message:str):
-        """ Add your Birthday to your Discord Profile """
+        """--> `birthday add DD-MM-YYYY` - Add your Birthday to your Discord Profile """
         try:
 
             if message is None:
@@ -236,12 +229,31 @@ class Users(commands.Cog):
             msg = message.strip()
             dob = datetime.strptime(msg, "%d-%m-%Y")
             today = date.today()
-            result = await self.db.update_birthday(ctx.guild.id,ctx.message.author.id,dob)
+            guild_id_list = self.bot.guilds 
+            member_on_guild_id_list = list()
+            for guild in guild_id_list:
+                guildObj = self.bot.get_guild(guild.id)
+                if guildObj:
+                    member=guildObj.get_member(ctx.message.author.id)
+                    if member:
+                        member_on_guild_id_list.append(guild.id)
+            
+            result = await self.db.update_birthday(ctx.guild.id,ctx.message.author.id,dob,member_on_guild_id_list)
+
             if result is True:
                 await ctx.message.add_reaction(Emoji.GREEN_TICK)
                 if (dob.month == today.month) and (dob.day == today.day):
-                    await ctx.send("HBD")
-                    #await Birthday(self.bot,self.bot.db_utlis,ctx.message.author).wish_birthday()
+                    channel_id = await self.db.get_birthday_announce_channel(ctx.guild.id)
+                    if channel_id:
+                        try:
+                            channel = self.bot.get_guild(ctx.guild.id).get_channel(channel_id)
+                            await Birthday(channel,ctx.message.author).wish_birthday()
+                        except Exception as Ex:
+                            await ctx.send(Ex)
+    
+                            await ctx.send(f"Birthday announce channel not setup. Ask server admin to setup one.")
+                            msg= await ctx.send(f"{ctx.message.author.mention} Happy Birthday ")
+                            await msg.add_reaction(Emoji.BIRTHDAY)
             else:
                 await ctx.message.add_reaction(Emoji.X)
 
@@ -251,7 +263,7 @@ class Users(commands.Cog):
     
     @birthday.command( name = "list",case_insensitive=True)
     async def list_birthday(self, ctx):
-        """ List out the birthdays of server members"""
+        """--> `birthday list` -  List out the birthdays of server members"""
         
         try:
             result=await self.db.get_member_birthday_list_on_guild(ctx.guild.id)

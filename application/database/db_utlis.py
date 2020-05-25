@@ -16,19 +16,19 @@ class DbUtlis():
             result = await self.conn.fetchrow(sql,value)
             if result:
                 if result['left_on']:
-                    logging.error(f"BOT has already left guild, guild_id: {id}")
+                    logging.error(f"ERROR: BOT has already left guild, guild_id: {id}")
                 else:
                     sql = "UPDATE BOT SET left_on =($1) where guild_id=($2);"
                     value=(datetime.utcnow(),id)
                     await self.conn.execute(sql,*value)
-                    logging.info(f"BOT has left guild, guild_id: {id}")
+                    logging.info(f"INFO: BOT has left guild, guild_id: {id}")
                     
             else:
                 sql = "INSERT INTO BOT(guild_id) VALUES ($1);"
                 await self.conn.execute(sql,value)
-                logging.info(f"BOT has joined on guild_id: {id}")
+                logging.info(f"INFO: BOT has joined on guild_id: {id}")
         except :
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def insert_into_bot_table(self,id):
         try:
@@ -40,39 +40,51 @@ class DbUtlis():
                     sql = "UPDATE BOT SET left_on =($1) where guild_id=($2);"
                     value=(None,id)
                     await self.conn.execute(sql,*value)
-                    logging.info(f"BOT has rejoined on guild_id: {id}")
+                    logging.info(f"INFO: BOT has rejoined on guild_id: {id}")
             else:
                 sql = "INSERT INTO BOT(guild_id) VALUES ($1);"
                 await self.conn.execute(sql,value)
                 sql = "INSERT INTO GUILD(guild_id) VALUES ($1);"
                 await self.conn.execute(sql,value)
-                logging.info(f"BOT has joined on guild_id: {id}")
+                logging.info(f"INFO: BOT has joined on guild_id: {id}")
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
-    async def insert_into_member_on_guild_table(self,guildId,memberId):
+    async def insert_into_member_on_guild_table(self,guildId,memberId,guildIdList=None):
         try:
-            sql = "INSERT INTO GUILD(guild_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM guild WHERE guild_id=($1));"
-            value=(guildId)
-            await self.conn.execute(sql,value)
+            logging.info(f"INFO: db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) Processing.." )
             sql = "INSERT INTO member(member_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM member WHERE member_id=($1));"
             value = (memberId)
             await self.conn.execute(sql,value)
-            sql = "SELECT left_on FROM members_on_guild where guild_id=($1) and member_id = ($2);"
-            value=(guildId,memberId)
-            result = await self.conn.fetchrow(sql,*value)
-            if result:
-                if result['left_on']:
-                    sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($2);"
-                    value=(None,guildId,memberId)
+            if guildIdList is None:
+                sql = "INSERT INTO GUILD(guild_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM guild WHERE guild_id=($1));"
+                value=(guildId)
+                await self.conn.execute(sql,value)
+                sql = "SELECT left_on FROM members_on_guild where guild_id=($1) and member_id = ($2);"
+                value=(guildId,memberId)
+                result = await self.conn.fetchrow(sql,*value)
+                if result:
+                    if result['left_on']:
+                        sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($2);"
+                        value=(None,guildId,memberId)
+                        await self.conn.execute(sql,*value)
+                        logging.info(f"INFO: db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) Member has rejoined guild")
+                else:
+                    sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
                     await self.conn.execute(sql,*value)
-                    logging.info(f"db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) Member has rejoined guild")
+                    logging.info(f"INFO: db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) New Member has joined guild")
             else:
-                sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
-                await self.conn.execute(sql,*value)
-                logging.info(f"db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) New Member has joined guild")
+                for guild_id in guildIdList:
+                    sql = "INSERT INTO GUILD(guild_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM guild WHERE guild_id=($1));"
+                    value=(guild_id)
+                    await self.conn.execute(sql,value)
+                    sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2) ON CONFLICT DO NOTHING;"
+                    value=(guild_id,memberId)
+                    await self.conn.execute(sql,*value)
+                logging.info(f"INFO: db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) executed \n- guildIdList - {guildIdList}")
+
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
             
     async def delete_from_member_on_guild_table(self,guildId,memberId):
         try:
@@ -81,12 +93,12 @@ class DbUtlis():
             result = await self.conn.fetchrow(sql,*value)
             if result:
                 if result['left_on']:
-                    logging.error(f"db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has already left guild")
+                    logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has already left guild")
                 else:
-                    sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($2);"
+                    sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($3);"
                     value=(datetime.utcnow(),guildId,memberId)
                     await self.conn.execute(sql,*value)
-                    logging.info(f"db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild")
+                    logging.info(f"INFO: db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild")
                     
             else:
                 sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
@@ -94,9 +106,9 @@ class DbUtlis():
                 sql = "INSERT INTO member(member_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM member WHERE member_id=($1));"
                 value = (memberId)
                 await self.conn.execute(sql,value)
-                logging.error(f"db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild. members_on_guild table new entry added")
+                logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild. members_on_guild table new entry added")
         except :
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) -TRACEBACK \n{traceback.format_exc()}")
 
     async def get_prefix_of_guild(self,id):
         try:
@@ -106,7 +118,7 @@ class DbUtlis():
             result = await self.conn.fetchrow(sql,value)
             return [result['prefix']]
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def get_default_clan_of_guild(self,id):
         try:
@@ -116,23 +128,23 @@ class DbUtlis():
             result = await self.conn.fetchrow(sql,value)
             if result:
                 clan_tag = result['clan_tag']
-                logging.info(f"db_utlis.py - get_default_clan_of_guild({id}) was found{clan_tag}")
+                logging.info(f"INFO: db_utlis.py - get_default_clan_of_guild({id}) was found{clan_tag}")
                 return str(clan_tag)
             else:
-                logging.info(f"db_utlis.py - get_default_clan_of_guild({id}) was not found{clan_tag}")
+                logging.info(f"INFO: db_utlis.py - get_default_clan_of_guild({id}) was not found{clan_tag}")
             return None
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def add_default_channel(self,guildId,channelId):
         try:
             sql = "UPDATE guild SET default_channel =($1) where guild_id=($2);"
             value = (channelId,guildId)
             result = await self.conn.execute(sql,*value)
-            logging.info(f"db_utlis.py - add_default_channel({guildId},{channelId}) was successfull")
+            logging.info(f"INFO: db_utlis.py - add_default_channel({guildId},{channelId}) was successfull")
             return
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def get_default_channel(self,guildId):
         try:
@@ -147,7 +159,7 @@ class DbUtlis():
             else:
                 return None    
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def add_new_public_clan_tag(self,clantag):
         try:
@@ -155,30 +167,30 @@ class DbUtlis():
             value = (clantag)
             result = await self.conn.fetchrow(sql,value)
             if result:
-                logging.info(f"db_utlis.py - add_new_public_clan_tag - Tag already presnet tag{clantag}, Return False")
+                logging.info(f"INFO: db_utlis.py - add_new_public_clan_tag - Tag already presnet tag{clantag}, Return False")
                 return False
             else:
                 sql = "INSERT INTO public_clan_list(clan_tag) VALUES ($1);"
                 await self.conn.execute(sql,value)
-                logging.info(f"db_utlis.py - add_new_public_clan_tag - New clan inserted {clantag}, Return True")
+                logging.info(f"INFO: db_utlis.py - add_new_public_clan_tag - New clan inserted {clantag}, Return True")
                 return True    
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
     async def add_new_global_clan_tag(self,clantag):
         try:
             sql = "SELECT id FROM global_clan_list where clan_tag=($1);"
             value = (clantag)
             result = await self.conn.fetchrow(sql,value)
             if result:
-                logging.info(f"db_utlis.py - add_new_global_clan_tag - Tag already presnet tag{clantag}, Return ID: {result['id']}")
+                logging.info(f"INFO: db_utlis.py - add_new_global_clan_tag - Tag already presnet tag{clantag}, Return ID: {result['id']}")
                 return result
             else:
                 sql = "INSERT INTO global_clan_list(clan_tag) VALUES ($1) RETURNING id;"
                 result = await self.conn.fetch(sql,value)
-                logging.info(f"db_utlis.py - add_new_global_clan_tag - New clan inserted {clantag}, Return ID:{result['id']}")
+                logging.info(f"INFO: db_utlis.py - add_new_global_clan_tag - New clan inserted {clantag}, Return ID:{result['id']}")
                 return result['id']  
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
     async def add_new_clan_tag(self,guilid,clantag):
         try:
             await self.add_new_public_clan_tag(clantag)
@@ -189,20 +201,20 @@ class DbUtlis():
                 id = ''.join(map(str, id)) # id is asyncpg.Record Type
                 value = (guilid,int(id))
                 result = await self.conn.fetchrow(sql,*value)
-                logging.info(f"db_utlis.py - add_new_clan_tag  global clan tag return {int(id)} ressult {result}")
+                logging.info(f"INFO: db_utlis.py - add_new_clan_tag  global clan tag return {int(id)} ressult {result}")
                 if result:
-                    logging.info(f"db_utlis.py - add_new_clan_tag({guilid},{clantag}) - Clan already present")
+                    logging.info(f"INFO: db_utlis.py - add_new_clan_tag({guilid},{clantag}) - Clan already present")
                 else:
                     sql = "INSERT INTO clans_on_guild(guild_id,clan_id)VALUES ($1,$2);"
                     await self.conn.execute(sql,*value)
-                    logging.info(f"db_utlis.py - add_new_clan_tag({guilid},{clantag}) - New clan registered.")
+                    logging.info(f"INFO: db_utlis.py - add_new_clan_tag({guilid},{clantag}) - New clan registered.")
                     sql = "UPDATE guild SET default_clan_id =($1) where guild_id=($2);"
                     value = (int(id),guilid)
                     await self.conn.execute(sql,*value)
-                    logging.info(f"db_utlis.py - add_new_clan_tag({guilid},{clantag}) - Default clan added.")
+                    logging.info(f"INFO: db_utlis.py - add_new_clan_tag({guilid},{clantag}) - Default clan added.")
                     return    
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
             
     async def list_clans_linked_to_guild(self,guilid):
@@ -215,13 +227,13 @@ class DbUtlis():
             if result:
                 for record in result:        
                     clan_list.append(record['clan_tag'])
-                logging.info(f"db_utlis.py - list_clans_linked_to_guild({guilid}) - return:{clan_list}")
+                logging.info(f"INFO: db_utlis.py - list_clans_linked_to_guild({guilid}) - return:{clan_list}")
                 return clan_list
             else:
-                logging.info(f"db_utlis.py - list_clans_linked_to_guild({guilid}) - return: False - {clan_list}")
+                logging.info(f"INFO: db_utlis.py - list_clans_linked_to_guild({guilid}) - return: False - {clan_list}")
                 return False
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
     
     async def add_war_log_channel(self,guilid,clantag,channelid):
         try:
@@ -232,13 +244,13 @@ class DbUtlis():
                 sql="UPDATE clans_on_guild SET war_log_channel = $1 FROM global_clan_list WHERE clans_on_guild.clan_id = global_clan_list.id AND clans_on_guild.guild_id=$2 and global_clan_list.clan_tag=$3"
                 value=(channelid,guilid,clantag)
                 await self.conn.execute(sql,*value)
-                logging.info(f"db_utlis.py - add_war_log_channel({guilid},{clantag},{channelid}) - return: True")
+                logging.info(f"INFO: db_utlis.py - add_war_log_channel({guilid},{clantag},{channelid}) - return: True")
                 return True
             else:
-                logging.info(f"db_utlis.py - add_war_log_channel({guilid},{clantag},{channelid}) - return: False")
+                logging.info(f"INFO: db_utlis.py - add_war_log_channel({guilid},{clantag},{channelid}) - return: False")
                 return False
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def get_list_of_public_clan_tags(self):
         try:
@@ -249,11 +261,11 @@ class DbUtlis():
                 for record in result:        
                     clan_list.append(record['clan_tag'])
 
-            logging.info(f"db_utlis.py - get_list_of_public_clan_tags() - return:{clan_list}")
+            logging.info(f"INFO: db_utlis.py - get_list_of_public_clan_tags() - return:{clan_list}")
             return clan_list
             
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def get_dict_of_guild_war_log_channel_of_clan(self, clantag):
         try:
@@ -268,11 +280,11 @@ class DbUtlis():
                     details_dict['channel_id']=record['war_log_channel']
                     clan_report_dict_list.append(details_dict)
 
-            logging.info(f"db_utlis.py - get_dict_of_guild_war_log_channel_of_clan({clantag}) - return:{clan_report_dict_list}")
+            logging.info(f"INFO: db_utlis.py - get_dict_of_guild_war_log_channel_of_clan({clantag}) - return:{clan_report_dict_list}")
             return clan_report_dict_list
             
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def get_clans_on_guild_information(self,guilid):
         try:
@@ -283,13 +295,13 @@ class DbUtlis():
             
             if result:
                 
-                logging.info(f"db_utlis.py - get_clans_on_guild_information({guilid}) - return:{result}")
+                logging.info(f"INFO: db_utlis.py - get_clans_on_guild_information({guilid}) - return:{result}")
                 return result
             else:
-                logging.info(f"db_utlis.py - get_clans_on_guild_information({guilid}) - return: False - {None}")
+                logging.info(f"INFO: db_utlis.py - get_clans_on_guild_information({guilid}) - return: False - {None}")
                 return False
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def insert_into_members_on_guild(self,guildId,memberId):
         try:
@@ -297,35 +309,36 @@ class DbUtlis():
             value = (guildId,memberId)
             result = await self.conn.fetch(sql,*value)
             if result:
-                logging.info(f"db_utlis.py - insert_into_members_on_guild({guildId},{memberId}) - already data is present")
+                logging.info(f"INFO: db_utlis.py - insert_into_members_on_guild({guildId},{memberId}) - already data is present")
             else:
                 sql = "INSERT INTOmembers_on_guild(guild_id,member_id) VALUES ($1,$2);"
                 value = (guildId,memberId)
                 await self.conn.execute(sql,*value)
-                logging.info(f"db_utlis.py - insert_into_members_on_guild({guildId},{memberId}) - member inserted into members_on_guild")
+                logging.info(f"INFO: db_utlis.py - insert_into_members_on_guild({guildId},{memberId}) - member inserted into members_on_guild")
             return
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
-    async def update_birthday(self,guildId,memberId,dob):
+    async def update_birthday(self,guildId,memberId,dob,guildIdList=None):
         try:
-            await self.insert_into_member_on_guild_table(guildId,memberId)
             sql = "INSERT INTO member(member_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM member WHERE member_id=($1));"
             value = (memberId)
             await self.conn.execute(sql,value)
+
+            await self.insert_into_member_on_guild_table(guildId,memberId,guildIdList)
             sql = "UPDATE member set dob =($1) where member_id = ($2)"
             value=(dob,memberId)
             result = await self.conn.execute(sql,*value)
             
             if result:
                 
-                logging.info(f"db_utlis.py - update_birthday({memberId},{dob}) - return:True")
+                logging.info(f"INFO: db_utlis.py - update_birthday({memberId},{dob}) - return:True")
                 return True
             else:
-                logging.error(f"db_utlis.py - update_birthday({memberId},{dob}) - return:False")
+                logging.error(f"ERROR: db_utlis.py - update_birthday({memberId},{dob}) - return:False")
                 return False
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
     async def get_members_on_guild(self,guildId):
         try:
@@ -336,11 +349,11 @@ class DbUtlis():
             if result:
                 for record in result:
                     list_member_dic.append({'member_id':record['member_id'],'dob':record['dob'],'global_xp':record['xp'],'guild_xp':record['guild_xp']})
-            logging.info(f"db_utlis.py - get_members_on_guild({guildId}) - return:{list_member_dic}")
+            logging.info(f"INFO: db_utlis.py - get_members_on_guild({guildId}) - return:{list_member_dic}")
             return list_member_dic
         except:
-            logging.info(f"db_utlis.py - get_members_on_guild({guildId}) - return: ERROR")
-            logging.error(traceback.format_exc())
+            logging.info(f"INFO: db_utlis.py - get_members_on_guild({guildId}) - return: ERROR")
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
             return None
 
     async def get_member_list_birthday_today_on_guild(self,guildId):
@@ -355,14 +368,14 @@ class DbUtlis():
                         if (dob.month == today.month) and (dob.day == today.day):
                             list_member.append(member['member_id'])
             if list_member:
-                logging.info(f"db_utlis.py - get_member_list_birthday_today_on_guild({guildId}) return {list_member}")
+                logging.info(f"INFO: db_utlis.py - get_member_list_birthday_today_on_guild({guildId}) return {list_member}")
                 return list_member
             else:
-                logging.info(f"db_utlis.py - get_member_list_birthday_today_on_guild({guildId}) return: False")
-                return False
+                logging.info(f"INFO: db_utlis.py - get_member_list_birthday_today_on_guild({guildId}) return: False")
+                return list_member
         except:
-            logging.error(traceback.format_exc())
-            return False
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
+            return list_member
     async def get_member_birthday_list_on_guild(self,guildId):
         try:
             list_member_dic_birthday=list()
@@ -372,28 +385,82 @@ class DbUtlis():
                     if member['dob']:
                         list_member_dic_birthday.append({'member_id':member['member_id'],'dob':member['dob']})
             if list_member_dic_birthday:
-                logging.info(f"db_utlis.py - get_member_birthday_list_on_guild({guildId}) return {list_member_dic_birthday}")
+                logging.info(f"INFO: db_utlis.py - get_member_birthday_list_on_guild({guildId}) return {list_member_dic_birthday}")
                 return list_member_dic_birthday
             else:
-                logging.info(f"db_utlis.py - get_member_birthday_list_on_guild({guildId}) return: False")
+                logging.info(f"INFO: db_utlis.py - get_member_birthday_list_on_guild({guildId}) return: False")
                 return False
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
             return False
-    add_bday_announce_channel
+    
     async def add_bday_announce_channel(self,guilid,channelid):
         try:
-            
-            sql="UPDATE clans_on_guild SET war_log_channel = $1 FROM global_clan_list WHERE clans_on_guild.clan_id = global_clan_list.id AND clans_on_guild.guild_id=$2 and global_clan_list.clan_tag=$3"
-            value=(channelid,guilid,clantag)
+            sql="UPDATE guild SET birthday_announce = $1 where guild_id = ($2)"
+            value=(channelid,guilid)
             await self.conn.execute(sql,*value)
-            logging.info(f"db_utlis.py - add_bday_announce_channel({guilid},{clantag},{channelid}) - return: True")
+            logging.info(f"INFO: db_utlis.py - add_bday_announce_channel({guilid},{channelid}) - return: True")
             return True
             
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
+            return False
+    
+    async def get_last_run_from_bot_info(self,botId):
+        try:
+            sql="SELECT last_check from bot_info where bot_id = ($1)"
+            value=(botId)
+            result= await self.conn.fetchrow(sql,value)
+            if result:
+                logging.info(f"INFO: db_utlis.py - get_last_run_from_bot_info() - return: {result['last_check']}")
+                return result['last_check']
+            return None
             
-
+        except:
+            logging.error(f"ERROR:  db_utlis.py - get_last_run_from_bot_info() -{traceback.format_exc()}")
+            return None
+    
+    async def get_list_birthday_announce_dict(self):
+        try:
+            list_birthday_announce_dict=list()
+            sql = "select * from guild;"
+            result = await self.conn.fetch(sql)
+            for record in result:
+                birthday_member_list = await self.get_member_list_birthday_today_on_guild(record['guild_id'])
+                list_birthday_announce_dict.append({'guild_id':record['guild_id'],'birthday_member_list':birthday_member_list})
+            logging.info(f"INFO: db_utlis.py - get_list_birthday_announce_dict() - executed \n- return {list_birthday_announce_dict}")
+            return list_birthday_announce_dict
+            
+        except:
+            logging.error(f"ERROR:  db_utlis.py - get_list_birthday_announce_dict() \n-{traceback.format_exc()}")
+            return None
+    
+    async def get_birthday_announce_channel(self,guildId):
+        try:
+            sql = "select birthday_announce from guild where guild_id = ($1)"
+            value = (guildId)
+            result = await self.conn.fetchrow(sql,value)
+            if result:
+                logging.info(f"INFO: db_utlis.py - get_birthday_announce_channel() - return{result['birthday_announce']} ")
+                return result['birthday_announce']
+            logging.info(f"INFO: db_utlis.py - get_birthday_announce_channel() - return None ")
+            
+        except:
+            logging.error(f"ERROR:  db_utlis.py - get_birthday_announce_channel() -{traceback.format_exc()}")
+            return None
+    async def update_last_check_in_bot_info(self,botId):
+        try:
+            time = datetime.now()
+            time = time.replace(hour=0, minute=0, second=0,microsecond=0)
+            sql = "UPDATE bot_info SET last_check = ($1) where bot_id = ($2)"
+            value = (time,botId)
+            await self.conn.execute(sql,*value)
+            logging.info(f"INFO: db_utlis.py - update_last_check_in_bot_info() - last_check updated to {time}")
+            
+        except:
+            logging.error(f"ERROR:  db_utlis.py - update_last_check_in_bot_info() -{traceback.format_exc()}")
+            return None
+    update_last_check_in_bot_info
 
     '''
     async def insert_into_bot_table(self,id):
