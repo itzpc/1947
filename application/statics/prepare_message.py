@@ -3,6 +3,7 @@ import discord
 from application.statics.create_message import CreateMessage
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
+from datetime import datetime 
 
 class PrepMessage():
     
@@ -162,4 +163,29 @@ class PrepMessage():
         embed_args["embed_description"]=description
         content,embed=CreateMessage(is_embed=True).create_message(**embed_args)
         return embed
+
+    @staticmethod     
+    def prepare_profile_message(member_info,member):
+        discord_date=member.created_at 
+        now_time = datetime.utcnow()
+        time_diiference = now_time - discord_date
+        if time_diiference.days >100 :
+            remark=f"Looks old, So Profile is good {Emoji.THUMPS_UP}"
+        elif time_diiference.days<10:
+            remark=f"Looks newly created, So Profile seems fake {Emoji.THUMS_DOWN}"
+        else:
+            remark = f"Looks recently created, So Profile looks ok" 
+        roles=""
         
+        for role in member.roles:
+            roles += f"`{role.name}`, "
+
+        embed_args = dict()
+        embed_args["embed_title"]= member.name
+        embed_args["embed_colour"]=0xFFFFFF
+        embed_args["set_thumbnail_url"]=member.avatar_url
+        embed_args["add_field"]=[["ID",member.id,True],["Name",member.name,True],["Nickname",member.nick,True],[f"Birthday {Emoji.BIRTHDAY} ",member_info['dob'] or None,True],["Global XP",f"{member_info['xp'] or None} points",True],["Server XP",f"{member_info['guild_xp'] or None} points",True],["Joined Server on",member.joined_at,True],["Created Discord on",discord_date,True], ["Remark on Profile",remark,True],["Highest Role on Server",member.top_role.name or None,True],["Roles on server",roles,False] ]
+        content,embed=CreateMessage(is_embed=True).create_message(**embed_args)
+        return embed
+
+

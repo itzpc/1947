@@ -98,5 +98,6 @@ class CreateMessage():
 
         if fileds:
             for field in fileds:
-                embed.add_field(name=field[0], value=field[1], inline=field[2])
+                if field[1]:
+                    embed.add_field(name=field[0], value=field[1], inline=field[2])
         return self.content,embed

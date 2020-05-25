@@ -4,10 +4,11 @@ import asyncio
 import gspread
 import discord
 from discord.ext import commands
-from application.constants.guild1947 import Guild1947Clan
+from application.constants.guildsupport import GuildSupport
 from application.constants.emoji import Emoji
 from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 from application.statics.create_message import CreateMessage
+from application.statics.prepare_message import PrepMessage
 from application.database.db_utlis import DbUtlis
 from datetime import datetime,date
 from .utlis.paginator import TextPages
@@ -26,134 +27,57 @@ class Users(commands.Cog):
     async def initialize(self):
         await self.bot.wait_until_ready()
 
-    @staticmethod
-    def get_list_of_war_log_channel_from_list_of_record(records):
-        war_log_dict_list=list()
-        for record in records:
-            war_log_dict_list.append({'clantag':record['clan_tag'],'warlog':record['war_log_channel']})
-        return war_log_dict_list
+    @commands.command(aliases=['Av','av','avatar','Avatar'])
+    async def user_avatar(self, ctx, user:discord.User):
+        """--> `av @mentionUser ` - To view the avatar of a user"""
+        if user.bot:
+            return
+        embed = discord.Embed(title = f"Avatar Requested of EKA Warrior : {user.name}",
+            color = 0x98FB98
+            )
+        embed.set_image(url = user.avatar_url) 
+        await ctx.send(embed=embed)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
 
-    @staticmethod
-    def get_clan_tag_in_current_channel(current_channel,list_of_channel_dic):
-        logging.info(f"users.py - get_clan_tag_in_current_channel({current_channel},{list_of_channel_dic})")
-        clan_tag = None
-        if list_of_channel_dic:
-            for record in list_of_channel_dic:
-                if current_channel in record.values():
-                    clan_tag = record['clantag']
-                    return clan_tag
-        return clan_tag
-
-    @commands.command(name="Clan", aliases=["c","C","clan"])
-    async def search_clan(self, ctx, clan_tag):
-        """Search a clan by clan tag"""
+    @commands.command(aliases=['Dm','dm','DM'])
+    async def dm_user(self, ctx, user:discord.User,msg:str):
+        """--> `dm @mentionUser message` - BOT DM's mentioned user a message"""
+        if user.bot:
+            return
+        embed = discord.Embed(title = f"You have a message from : {ctx.message.author}",
+            description = msg,
+            color = 0x98FB98
+            )
+        embed.set_thumbnail(url=str(ctx.message.author.avatar_url))
+        
         try:
-            
-            clan_tag = coc.utils.correct_tag(clan_tag)
-            clan = await self.bot.coc.get_clan(clan_tag)
-            content = f"The clan name for {clan_tag} is {clan.name}.\n"
-            content += f"{clan.name} currently has {clan.member_count} members.\n\n"
-
-            war = await self.bot.coc.get_current_war(clan_tag)
-            if war:
-                content += f"Current war state is {war.state}\n"
-                if war.state != "notInWar":
-                    content += f"Opponent: {war.opponent}"
-
-            await ctx.send(content)
-            await ctx.message.add_reaction(Emoji.GREEN_TICK)
-        except Exception as Ex:
-            await ctx.message.add_reaction(Emoji.GREEN_CROSS)
-            logging.error(f"clan_search {Ex} ")
-
-    @commands.max_concurrency(1)
-    @commands.command(name="Stats", aliases=["warstatus","Status","stats","status"],case_insensitive=True)
-    async def war_status(self, ctx):
-        "Get the current war status of your clan"
-        clan_tag = None
-        result= await self.db.get_clans_on_guild_information(ctx.guild.id)
-        if result:
-            list_channels = self.get_list_of_war_log_channel_from_list_of_record(result)
-            clan_tag = self.get_clan_tag_in_current_channel(ctx.channel.id,list_channels)
-            if clan_tag is None:
-                clan_tag = await self.db.get_default_clan_of_guild(ctx.guild.id)
-        else:
-            clan_tag = await self.db.get_default_clan_of_guild(ctx.guild.id)
-
-        if clan_tag:
-            clan_tag = coc.utils.correct_tag(clan_tag)
-            war = await self.bot.coc.get_current_war(clan_tag)
-            if war:
-                clan_name = war.clan.name
-                opponent_name = war.opponent.name
-                content = f"`{clan_name}` VS `{opponent_name}`\n Current war state is {war.state}\n"
-                content += f"{war.clan.stars}/{war.clan.max_stars} VS {war.opponent.stars}/{war.opponent.max_stars} "
-            else:
-                content = " No wars found !"
-        else:
-            content="No Default Clans linked. Try `help setup clan` First"
-            
-        await ctx.send(content)
+            await user.send(embed=embed)
+            Msg=await ctx.send(f"Hey {ctx.message.author}, Your secret message has been sent to the user.")
+            await Msg.add_reaction(Emoji.GREEN_TICK)
+        except:
+            Msg=await ctx.send(f"Sorry {ctx.message.author}, The user has disabled DM. Your secret message could not be sent.")
+            await Msg.add_reaction(Emoji.X)
+        await ctx.message.delete()
+    
+    @commands.command(aliases=['Profile'])
+    async def profile(self, ctx):
+        """--> profile - Display the user's profile"""
+        member_info = await self.db.get_member_info_on_guild(ctx.guild.id,ctx.message.author.id)
+        embed =  PrepMessage().prepare_profile_message(member_info,ctx.message.author)
+        await ctx.send(embed=embed)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
     
-    def prepare_player_found_message(self,player):
-
-        args = dict()
-        args["embed_title"]=player.name
-        args["author_name"]=player.tag 
-        args["embed_title_url"]=player.share_link
-
-        msg=f"**PROFILE**\n\n"
-        msg+=f"{Emoji.CLAN} : {player.clan} -\t{player.role} \n⭐ : {player.war_stars} \t 🏆 :({player.trophies}){player.best_trophies} \t "
-        msg+=f"\n\n**HERO**\n\n"
-        if player.heroes:
-            for hero in player.heroes:
-                if BotEmoji.heroes_emoji.get(hero.name):
-                    msg+=f"{BotEmoji.heroes_emoji[hero.name]}  {hero.level} "
-        msg += f"\n\n**VILLAGE BASE TROOPS** \n\n"
-        count=0
-        for troop_name, troop in player.get_ordered_troops(coc.HOME_TROOP_ORDER).items():
-            if count ==7:
-                count =0
-                msg+=f"\n"
-            if BotEmoji.troop_emoji[troop_name]:
-                count +=1
-                msg+=f"{BotEmoji.troop_emoji[troop_name]}  {troop.level} \t"
-        args["embed_description"]=f"  \n{msg}\n"
-        if player.town_hall == 13:
-            args["set_thumbnail_url"]=BotImage.TH13
-        elif player.town_hall == 12:
-            args["set_thumbnail_url"]=BotImage.TH12
-        elif player.town_hall == 11:
-            args["set_thumbnail_url"]=BotImage.TH11
-        elif player.town_hall == 10:
-            args["set_thumbnail_url"]=BotImage.TH10
-        else:
-            args["set_thumbnail_url"]=BotImage.TH9
-
-        message=CreateMessage(None,True)
-        return message.create_message(**args)
-
-    @commands.max_concurrency(1)
-    @commands.command(name="Player", aliases=["P","player","p"],case_insensitive=True)
-    async def search_player(self, ctx, player_tag):
-        """ Search a Clash of Clans Player by Player ID """
-        if player_tag is None :
-            await ctx.send(" ` 1947 link #playertag ` - You are missing a player tag to link")
-        else:
-            try:
-                memberObj=self.bot.get_guild(ctx.guild.id).get_member(ctx.author.id)
-                player_tag = coc.utils.correct_tag(player_tag)
-                player = await self.bot.coc.get_player(player_tag)
-                content,embed = self.prepare_player_found_message(player)
-                content=f"{player.tag} - Details Found"
-                await ctx.send(content=content,embed=embed)
-            except Exception as Ex:
-                await ctx.send(f" Player not found with player_tag : {player_tag} \n ```{Ex}```")
+    @commands.command(aliases=['Whois'])
+    async def whois(self, ctx,user:discord.Member):
+        """--> profile - Display the user's profile"""
+        member_info = await self.db.get_member_info_on_guild(ctx.guild.id,user.id)
+        embed =  PrepMessage().prepare_profile_message(member_info,user)
+        await ctx.send(embed=embed)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
 
     @commands.command(aliases=['join'])
     async def invite(self, ctx):
-        """BOT Joins a server."""
+        """--> `invite` - Invite BOT link to add to your server."""
         if ctx.guild.id == GuildSupport.SERVER_ID:
             perms = discord.Permissions.none()
             # perms.administrator = True
@@ -192,30 +116,15 @@ class Users(commands.Cog):
         else:
             ctx.send(f"You need to join support server first to invite bot. {GuildSupport.SERVER_INVITE_URL}")
 
-    @commands.max_concurrency(1)
-    @commands.command(name="Claim", aliases=["claim","Cv","cv","Claim_village"])
-    async def claim_village(self, ctx, player_tag):
-        """ Link a Clash of Clan profile to Discord ID """
-        if player_tag is None :
-            await ctx.send(" ` 1947 claim #playertag ` - You are missing a player tag to claim village")
-        else:
-            memberObj=self.bot.get_guild(ctx.guild.id).get_member(ctx.author.id)
-            player_tag = coc.utils.correct_tag(player_tag)
-            #try:
-            player = await self.bot.coc.get_player(player_tag)
-
-            await ctx.send(content=player)
-            # except Exception as Ex:
-            #     await ctx.send(f" Player not found with player_tag : {player_tag} \n ```{Ex}```")
     @commands.group(invoke_without_command=True, name = "Birthday",case_insensitive=True,aliases=['birthday','bday','Bday'])
     async def birthday(self, ctx):
-        """ Birthday commands - help birthday """
+        """--> `birthday` - Various Birthday commands, `help birthday` to explore more """
         title = "Birthday"
         description = "Celebrate your birthday with friends using the following commands"
         embed = discord.Embed(title=title,description=description,color=discord.Color.dark_magenta ()) 
         embed.add_field(name="birthday add DD-MM-YYYY", value=f"Adds your birthday", inline= False)
         embed.add_field(name="birthday list", value=f"list out registered birthdays", inline= False)
-        content = " Type `help birthday` to know more"
+        content = " Type `help birthday <command>` to know more about each birthday commands"
         await ctx.send(content=content,embed=embed)
 
     @birthday.command( name = "add",case_insensitive=True)
@@ -275,7 +184,7 @@ class Users(commands.Cog):
                     userObj=self.bot.get_user(record['member_id'])
                     if userObj:
                         if (record['dob'].month == today.month) and (record['dob'].day == today.day):
-                            text += f"{count}. {Emoji.BIRTHDAY} {userObj.display_name} - {record['dob']} \n "
+                            text += f"{count}. {Emoji.BIRTHDAY} {userObj.display_name} - {record['dob']} \n"
                         else:
                             text += f"{count}. {userObj.display_name} - {record['dob']} \n"
                         count+=1
@@ -290,6 +199,47 @@ class Users(commands.Cog):
         except Exception as Ex:
             logging.error("ERROR : users.py : list_bday :".format(Ex))
         
+    @commands.group(invoke_without_command=True, name = "report",case_insensitive=True,aliases=['Report'])
+    async def report(self, ctx):
+        """--> `report` - Report activity to 1947 BOT Admin """
+        title = "Report"
+        description = "Report following actions to 1947 BOT Developers"
+        embed = discord.Embed(title=title,description=description,color=discord.Color.dark_magenta()) 
+        embed.add_field(name="report bug", value=f"To report any bug", inline= False)
+        embed.add_field(name="report feature", value=f"To report any new feature you want to see in the next release", inline= False)
+        embed.add_field(name="report suggest", value=f"To suggest any improvements to existing feature you want to see in the next release", inline= False)
+        content = " Type `help report <command>` to know more about each commands"
+        await ctx.send(content=content,embed=embed)
+
+    @report.command( name = "bug",case_insensitive=True)
+    async def report_bug(self, ctx,* ,body:str):
+        """--> `report bug <explain bug> - To report a bug"""
+        body=body[:1500]
+        embed = discord.Embed(title="BUG",description=f"`{ctx.message.author.id}` reported a bug in `{ctx.guild.id}` \n```{body}```",color=discord.Color.red())
+        embed.set_author(name=ctx.message.author.name, icon_url=ctx.message.author.avatar_url)
+        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon_url)
+        await self.bot.get_guild(GuildSupport.SERVER_ID).get_channel(GuildSupport.REPORT_CHANNEL_ID).send(embed=embed)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
+
+    @report.command( name = "feature",case_insensitive=True)
+    async def report_feature(self, ctx,* ,body:str):
+        """--> `report feature <explain feature> - To report a new feature you want to see it on BOT"""
+        body=body[:1500]
+        embed = discord.Embed(title="NEW FEATURE REQUEST",description=f"`{ctx.message.author.id}` reported a new feature in `{ctx.guild.id}` \n```{body}```",color=discord.Color.green())
+        embed.set_author(name=ctx.message.author.name, icon_url=ctx.message.author.avatar_url)
+        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon_url)
+        await self.bot.get_guild(GuildSupport.SERVER_ID).get_channel(GuildSupport.REPORT_CHANNEL_ID).send(embed=embed)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
+
+    @report.command( name = "suggest",case_insensitive=True)
+    async def report_suggest(self, ctx,* ,body:str):
+        """--> `report suggest <explain suggestions> - To report a suggestion on existing feature of 1947 BOT"""
+        body=body[:1500]
+        embed = discord.Embed(title="SUGGEST CHANGE IN FEATURE ",description=f"`{ctx.message.author.id}` reported a suggestion about a feature in `{ctx.guild.id}` \n```{body}```",color=discord.Color.blue())
+        embed.set_author(name=ctx.message.author.name, icon_url=ctx.message.author.avatar_url)
+        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon_url)
+        await self.bot.get_guild(GuildSupport.SERVER_ID).get_channel(GuildSupport.REPORT_CHANNEL_ID).send(embed=embed)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
 
 def setup(bot):
     bot.add_cog(Users(bot))

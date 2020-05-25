@@ -340,6 +340,21 @@ class DbUtlis():
         except:
             logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
 
+    async def get_member_info_on_guild(self,guildId,memberId):
+        try:
+            
+            sql = "select * from members_on_guild join member on members_on_guild.member_id=member.member_id where members_on_guild.guild_id =($1) and members_on_guild.member_id =($2)  ;"
+            value = (guildId,memberId)
+            result = await self.conn.fetchrow(sql,*value)
+            if result:
+                logging.info(f"INFO: db_utlis.py - get_member_info_on_guild({guildId},{memberId}) - executed \n- return:{result}")
+                return result
+            logging.info(f"INFO: db_utlis.py - get_member_info_on_guild({guildId},{memberId}) - executed \n- return: None")
+            return None
+        except:
+            logging.error(f"ERROR:  db_utlis.py - get_member_info_on_guild({guildId},{memberId}) -TRACEBACK \n{traceback.format_exc()}")
+            return None
+    
     async def get_members_on_guild(self,guildId):
         try:
             list_member_dic = list()
