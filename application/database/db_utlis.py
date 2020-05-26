@@ -351,6 +351,14 @@ class DbUtlis():
             if result:
                 logging.info(f"INFO: db_utlis.py - get_member_info_on_guild({guildId},{memberId}) - executed \n- return:{result}")
                 return result
+            
+            else:
+                await self.insert_into_member_on_guild_table(guildId,memberId)
+                sql = "select * from members_on_guild join member on members_on_guild.member_id=member.member_id where members_on_guild.guild_id =($1) and members_on_guild.member_id =($2)  ;"
+                value = (guildId,memberId)
+                result = await self.conn.fetchrow(sql,*value)
+                logging.info(f"INFO: db_utlis.py - get_member_info_on_guild({guildId},{memberId}) - executed else part \n- return:{result}")
+                return result
             logging.info(f"INFO: db_utlis.py - get_member_info_on_guild({guildId},{memberId}) - executed \n- return: None")
             return None
         except:
