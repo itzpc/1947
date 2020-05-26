@@ -23,3 +23,11 @@ class PostgreDB:
             return
         except Exception as dBx:
             logging.error(f" Error in creating connection : {dBx}")
+
+    async def sample_connection(self):
+        try:
+            conn =  await asyncpg.connect(self.uri)
+            logging.info(f" Db client connection created")
+            return conn
+        except Exception as dBx:
+            logging.error(f" Error in creating connection : {dBx}")

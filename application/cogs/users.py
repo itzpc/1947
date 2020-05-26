@@ -3,6 +3,8 @@ import logging
 import asyncio
 import gspread
 import discord
+import aiohttp
+from aiohttp import ClientSession
 from discord.ext import commands
 from application.constants.guildsupport import GuildSupport
 from application.constants.emoji import Emoji
@@ -10,7 +12,8 @@ from application.constants.bot_const import BotImage, BotVariables, BotEmoji
 from application.statics.create_message import CreateMessage
 from application.statics.prepare_message import PrepMessage
 from application.database.db_utlis import DbUtlis
-from datetime import datetime,date
+from datetime import datetime,date,timedelta
+
 from .utlis.paginator import TextPages
 from .utlis.birthday import Birthday
 
@@ -240,6 +243,121 @@ class Users(commands.Cog):
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon_url)
         await self.bot.get_guild(GuildSupport.SERVER_ID).get_channel(GuildSupport.REPORT_CHANNEL_ID).send(embed=embed)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
+
+    @commands.group(invoke_without_command=True, name = "Covid",case_insensitive=True,aliases=['covid'])
+    async def covid(self, ctx):
+        """--> `covid` - Get some information about covid """
+        title = "Covid"
+        description = "Get some information about covid "
+        embed = discord.Embed(title=title,description=description,color=discord.Color.dark_magenta()) 
+        embed.add_field(name="covid state <state name>", value=f"To get covid information about the state provided. (India Only)", inline= False)
+        
+        content = " Type `help covid <command>` to know more about each commands"
+        await ctx.send(content=content,embed=embed)
+
+    @commands.max_concurrency(1)
+    @covid.command( name = "State",case_insensitive=True)
+    async def covid_state(self, ctx,*,state_name:str):
+        """--> `covid state <state name> - To get covid information about the state provided.T"""
+        data=None
+        found = False
+        url = 'https://api.covid19india.org/data.json'
+        url1 = 'https://api.covid19india.org/states_daily.json'
+        async with ClientSession() as session:
+            try:
+                response = await session.request(method='GET', url=url)
+                response1 = await session.request(method='GET', url=url1)
+                response.raise_for_status()
+                response1.raise_for_status()
+            except aiohttp.HTTPError as http_err:
+                logging.error(f"ERROR users.py covid_state() - {http_err}")
+            except Exception as err:
+                logging.error(f"ERROR users.py covid_state() - {err}")
+            response_json = await response.json()
+            response_json1 = await response1.json()
+            data=response_json
+            response_json1 = await response1.json()
+            data1=response_json1
+        if data is None or data1 is None:
+            await ctx.send(f" The service is down, Try again later`")
+            await ctx.message.add_reaction(Emoji.GREEN_CROSS)
+        else:
+            daily_data=data1['states_daily']
+            state_wise= data['statewise']
+            for state in state_wise:
+                if state['state'].lower() == state_name.strip().lower():
+                    embed = discord.Embed(title="Covid",description=f"Information about {state_name}",color=discord.Color.red())
+                    image_url = "https://www.wistv.com/resizer/bd1BCPA4OPS3RW9WN31ji5HZFQk=/1200x0/arc-anglerfish-arc2-prod-raycom.s3.amazonaws.com/public/DAJYEGYUBREQZPVTJ6FRZNFEKA.png"
+                    #embed.set_image(url = image_url) 
+                    embed.add_field(name="State", value=state['state'], inline= True)
+                    embed.add_field(name="Last Updated", value=state['lastupdatedtime'], inline= True)
+                    embed.add_field(name="Total Active Cases", value=state['active'], inline= True)
+                    embed.add_field(name="Total Confirmed Cases", value=state['confirmed'], inline= True)
+                    embed.add_field(name="Total Death", value=state['deaths'], inline= True)
+                    embed.add_field(name="Total Recovered Cases", value=state['recovered'], inline= True)
+                    today=datetime.utcnow()
+                    yesterday = today -timedelta(days = 1) 
+                    today = today.strftime("%d-%b-%y")
+                    yesterday = yesterday.strftime("%d-%b-%y")
+                    state_code=str(state['statecode'].lower())
+                    for day in daily_data:
+                        if day['date'] == today:
+                            if day['status'].strip().lower() == "confirmed":
+                                confirmed_today =day.get(state_code,None)
+                                if confirmed_today:
+                                    embed.add_field(name="Confirmed Today Cases", value=confirmed_today, inline= True)
+                            if day['status'].strip().lower() == "recovered":
+                                recovered_today =day.get(state_code,None)
+                                if recovered_today:
+                                    embed.add_field(name="Recovered Today Cases", value=recovered_today, inline= True)
+                            if day['status'].strip().lower() == "deceased":
+                                deceased_today =day.get(state_code,None)
+                                if deceased_today:
+                                    embed.add_field(name="Recovered Today Cases", value=deceased_today, inline= True)
+                        if day['date'] == yesterday:
+                            if day['status'].strip().lower() == "confirmed":
+                                confirmed_yesterday =day.get(state_code,None)
+                                if confirmed_yesterday:
+                                    embed.add_field(name="Confirmed Yesterday Cases", value=confirmed_yesterday, inline= True)
+                            if day['status'].strip().lower() == "recovered":
+                                recovered_yesterday =day.get(state_code,None)
+                                if recovered_yesterday:
+                                    embed.add_field(name="Recovered Yesterday Cases", value=recovered_yesterday, inline= True)
+                            if day['status'].strip().lower() == "deceased":
+                                deceased_yesterday =day.get(state_code,None)
+                                if deceased_yesterday:
+                                    embed.add_field(name="Recovered Yesterday Cases", value=deceased_yesterday, inline= True)
+                    found = True
+                    await ctx.send(embed=embed)
+                    await ctx.message.add_reaction(Emoji.GREEN_TICK)
+            if found == False:
+                await ctx.send(f" We dont have information about state : `{state_name}`")
+                await ctx.message.add_reaction(Emoji.GREEN_CROSS)
+
+    @commands.command(aliases=['Info'])
+    async def info(self, ctx):
+        """--> `info` -  Little information about bot"""
+        bot_info = await self.db.get_bot_info(BotVariables.BOT_ID)
+        title = "BOT is Online"
+        description = f"Info"
+        last_down_time = bot_info['last_down_time']
+        now = datetime.utcnow()
+        time_diff = now-last_down_time
+        duration = time_diff/60 
+        embed = discord.Embed(title=title,description=description,color=discord.Color.green()) 
+        embed.add_field(name="Bot Owner", value=f"Pc",inline=False)
+        embed.add_field(name="Bot Version", value=f"{self.bot.version}" )
+        embed.add_field(name="Last Down time", value=last_down_time, inline=True)
+        embed.add_field(name="Last Down Duration", value=f"Lasted {duration.seconds} seconds", inline=True)
+        embed.add_field(name="Up Time", value=f"About {time_diff.days} days", inline=True)
+        embed.add_field(name="Last Periodic Check", value=bot_info['last_check'], inline=True)
+        embed.add_field(name="Discord Version", value=f"{discord.__version__}" )
+        embed.add_field(name="COC Version", value=f"{coc.__version__}" )
+        embed.add_field(name="# Servers", value=f"{len(self.bot.guilds)}", inline=True)
+        embed.add_field(name="# Users", value=f"{len(self.bot.users)}", inline=True)
+        await ctx.send(embed=embed)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
+
 
 def setup(bot):
     bot.add_cog(Users(bot))

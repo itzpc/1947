@@ -9,4 +9,5 @@ oauth2client
 pprint
 asyncpg
 pillow
+requests-async
 #pandas

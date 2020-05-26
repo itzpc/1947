@@ -152,7 +152,7 @@ class Coc(commands.Cog, name="Clash of Clans"):
     @commands.command(name="Claim", aliases=["claim","Cv","cv","Claim_village"])
     async def claim_village(self, ctx, player_tag):
         """--> `claim #playerTag`  - Link a Clash of Clan profile to Discord ID """
-        ctx.send("This feature will be released in the Next update of 1947 BOT")
+        await ctx.send("This feature will be released in the Next update of 1947 BOT")
         # if player_tag is None :
         #     await ctx.send(" ` 1947 claim #playertag ` - You are missing a player tag to claim village")
         # else:

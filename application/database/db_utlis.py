@@ -4,6 +4,8 @@ import asyncpg
 import logging
 import traceback
 from datetime import datetime,date
+from application.database.postgre_db import PostgreDB
+from application.config.config import PostgreeDB_Config
 
 class DbUtlis():
     def __init__(self,connection):
@@ -420,7 +422,38 @@ class DbUtlis():
         except:
             logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
             return False
-    
+
+    async def get_bot_info(self,botId):
+        try:
+            sql="SELECT * from bot_info where bot_id = ($1)"
+            value=(botId)
+            result= await self.conn.fetchrow(sql,value)
+            if result:
+                logging.info(f"INFO: db_utlis.py - get_last_run_from_bot_info() - return: {result}")
+                return result
+            return None
+            
+        except:
+            logging.error(f"ERROR:  db_utlis.py - get_last_run_from_bot_info() -{traceback.format_exc()}")
+            return None
+    async def update_down_duration_bot_info(self,botId,duration):
+        try:
+            sql="UPDATE bot_info SET last_down_duration = ($2)where bot_id = ($1)"
+            value=(botId,duration)
+            await self.conn.execute(sql,*value)
+            logging.info(f"INFO:  db_utlis.py - update_down_duration_bot_info() -success")
+        except:
+            logging.error(f"ERROR:  db_utlis.py - update_down_duration_bot_info() -{traceback.format_exc()}")
+            return None
+    async def update_last_down_time_bot_info(self,botId,down_time):
+        try:
+            sql="UPDATE bot_info SET last_down_time = ($2)where bot_id = ($1)"
+            value=(botId,down_time)
+            await self.conn.execute(sql,*value)
+            logging.info(f"INFO:  db_utlis.py - update_last_down_time_bot_info() -success")
+        except:
+            logging.error(f"ERROR:  db_utlis.py - update_last_down_time_bot_info() -{traceback.format_exc()}")
+            return None
     async def get_last_run_from_bot_info(self,botId):
         try:
             sql="SELECT last_check from bot_info where bot_id = ($1)"
@@ -475,7 +508,79 @@ class DbUtlis():
         except:
             logging.error(f"ERROR:  db_utlis.py - update_last_check_in_bot_info() -{traceback.format_exc()}")
             return None
-    update_last_check_in_bot_info
+
+    async def insert_into_war_table(self,value):
+        try:
+            
+            sql="select * from war where home_clan_tag=($1) and opponent_tag=($2) and end_time > NOW();"
+            val=(value[0],value[1])
+            result = await self.conn.fetchrow(sql,*val)
+            if result:
+                logging.info(f"INFO: db_utlis.py - insert_into_war_table() : already inserted")
+            else:
+                sql = "INSERT INTO war (home_clan_tag,opponent_tag,preparation_start_time,preparation_msg_post,start_time,start_msg_post,end_time,end_msg_post,home_clan_members,opponent_clan_members,war_type,home_clan_stars,home_clan_destruction,home_clan_xp,opponent_clan_stars,opponent_clan_destruction,opponent_clan_xp,max_stars,home_attacks_used,opponent_attacks_used)  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20);"
+                await self.conn.execute(sql,*value)
+                logging.info(f"INFO: db_utlis.py - insert_into_war_table() : return True")
+            return True
+        except:
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
+            return False 
+    async def update_war_table(self,value):
+        try:
+            
+            sql="select war_id from war where NOW() - interval '23 hours' < end_time and home_clan_tag=($1) and opponent_tag=($2) ;"
+            value=list(value)
+            home_tag = value.pop(0)
+            away_tag=value.pop(0)
+            val=(home_tag,away_tag)
+            result = await self.conn.fetchrow(sql,*val)
+            if result:
+                
+                value.append(result['war_id'])
+                value = tuple(value)
+                sql = "UPDATE war SET home_clan_stars = ($1),home_clan_destruction = ($2),home_clan_xp = ($3),opponent_clan_stars = ($4),opponent_clan_destruction = ($5),opponent_clan_xp = ($6),home_attacks_used = ($7),opponent_attacks_used = ($8) where war_id = ($9)"
+                await self.conn.execute(sql,*value)
+                logging.info(f"INFO: db_utlis.py - update_war_table() : updated war_end")
+            else:
+                logging.warning(f"WARNING: db_utlis.py - update_war_table() : Found an old war data")
+            return True
+        except:
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
+            return False  
+    async def get_war_id_from_war_table(self,home_clan,opponentclan):
+        try:
+            sql="select war_id from war where NOW() - interval '23 hours' < end_time and home_clan_tag=($1) and opponent_tag=($2) ;"
+            val=(home_clan,opponentclan)
+            result = await self.conn.fetchrow(sql,*val)
+            if result:
+                logging.info(f"INFO: db_utlis.py - get_war_id_from_war_table() : found  war_id{result['war_id']}")
+                return result['war_id']
+            else:
+                logging.warning(f"WARNING: db_utlis.py - get_war_id_from_war_table() : Not Found")
+            return None
+        except:
+            logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
+            return None
+    async def insert_into_attack_table(self,attack_insert_values):
+        try:
+            sql="insert into attack values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28);"
+            await self.conn.execute(sql,*attack_insert_values)
+            logging.info(f"INFO: db_utlis.py - insert_into_attack_table() : Inserted ")
+            return True
+        except:
+            logging.error(f"ERROR:  db_utlis.py - insert_into_attack_table() -TRACEBACK \n{traceback.format_exc()}")
+            return False   
+
+    async def backup_attack_table(self,attack_table_loc):
+        try:
+            conn = await PostgreDB(PostgreeDB_Config.URI).sample_connection()
+            await conn.copy_from_table('attack',output=attack_table_loc,format='csv')
+            logging.info(f"INFO: db_utlis.py - backup_attack_table() : Done ")
+            await PostgreDB(PostgreeDB_Config.URI).close(conn)
+            return True
+        except:
+            logging.error(f"ERROR:  db_utlis.py - backup_attack_table() -TRACEBACK \n{traceback.format_exc()}")
+            return False
 
     '''
     async def insert_into_bot_table(self,id):

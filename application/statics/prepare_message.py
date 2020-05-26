@@ -120,7 +120,7 @@ class PrepMessage():
             msg += f"{attacks} \n"
         return str(msg)
 
-    def prepare_on_war_attack_message(self,attack,war):
+    def prepare_on_war_attack_message(self,attack,war,remark):
         embed_args = dict()
         attack_emoji, star_emoji, attack_msg , enemy, ally,colour=self.get_attack_info(attack.attacker.is_opponent,attack.attacker,attack.defender)
 
@@ -137,6 +137,7 @@ class PrepMessage():
         if len(defesive_attack)>0:
             description+=f"**PREVIOUS HITS ON THIS BASE**\n"
             description+=f"{self.print_previous_hit(defesive_attack,star_emoji)} \n \n"
+        description += f"{remark} \n\n"
         embed_args["embed_description"]=description
         embed_args["embed_colour"]=colour
         create_msg = CreateMessage(content,True)

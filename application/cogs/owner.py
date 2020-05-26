@@ -14,7 +14,8 @@ from application.database.db_utlis import DbUtlis
 from application.constants.bot_const import BotImage,BotEmoji
 from application.statics.prepare_message import PrepMessage
 from application.constants.guildsupport import GuildSupport
-from application.constants.bot_const import BotFiles
+from application.constants.bot_const import BotFiles,BotFiles
+from application.statics.war_action import WarAction
 
 class Owner(commands.Cog):
     """Commands for Only PC"""
@@ -100,7 +101,17 @@ class Owner(commands.Cog):
         logging.info(f"-----------------------------------log backup generated------------------------------")
         file = discord.File(os.path.join(directory+BotFiles.LOG_FILE_LOC),filename=BotFiles.LOG_FILE_NAME)
         await log_channel.send(file=file)
-        ctx.message.add_reaction(Emoji.GREEN_TICK)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
+    @commands.is_owner()
+    @commands.command(pass_context=True, name='backup')
+    async def backup(self, ctx):
+        """ Generates the log file of the bot for bebugging"""
+        directory=os.path.join(os.getcwd()+BotFiles.ATTACK_TABLE_LOC)
+        await self.db.backup_attack_table(str(directory))
+        log_channel = self.get_log_channel()
+        file = discord.File(directory,filename=BotFiles.ATTACK_TABLE_NAME)
+        await log_channel.send(file=file)
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
     
 def setup(bot):
     bot.add_cog(Owner(bot))

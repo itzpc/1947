@@ -58,6 +58,7 @@ class Bot1947(commands.AutoShardedBot):
         self.bot_init = BotInitialization()
         self.postgre_db=connection
         self.coc = coc_client
+        self.version= "Beta Test Release - v1"
         super().__init__(command_prefix=self.bot_init.get_prefix, description=DiscordConfig.DESCRIPTION)
         self.owner_id = DiscordConfig.BOT_OWNER_ID
         self.channel_id = DiscordConfig.ALLOWED_CHANNELS
@@ -94,13 +95,13 @@ class Bot1947(commands.AutoShardedBot):
     async def on_ready(self):
         logging.info("BOT IS ONLINE")
         print(f'Ready...!')
-        await BotActions(super()).online_message()
+        await BotActions(super(),self.postgre_db).online_message()
 
     async def on_resumed(self):
         logging.info("BOT RESUMED")
     
     async def close(self):
-        await BotActions(super()).offline_message()
+        await BotActions(super(),self.postgre_db).offline_message()
         self._task.cancel()
         await PostgreDB(PostgreeDB_Config.URI).close(self.postgre_db)
         await self.session.close()
