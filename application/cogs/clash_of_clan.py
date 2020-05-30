@@ -1,4 +1,5 @@
 import coc
+import os
 import logging
 import asyncio
 import gspread
@@ -6,12 +7,13 @@ import discord
 from discord.ext import commands
 from application.constants.guildsupport import GuildSupport
 from application.constants.emoji import Emoji
-from application.constants.bot_const import BotImage, BotVariables, BotEmoji
+from application.constants.bot_const import *
 from application.statics.create_message import CreateMessage
 from application.database.db_utlis import DbUtlis
 from datetime import datetime,date
 from .utlis.paginator import TextPages
 from .utlis.birthday import Birthday
+from .utlis.image_maker import ImageMaker
 
 class Coc(commands.Cog, name="Clash of Clans"):
     """Everyone can use this commands"""
@@ -81,19 +83,59 @@ class Coc(commands.Cog, name="Clash of Clans"):
             clan_tag = await self.db.get_default_clan_of_guild(ctx.guild.id)
 
         if clan_tag:
-            clan_tag = coc.utils.correct_tag(clan_tag)
-            war = await self.bot.coc.get_current_war(clan_tag)
-            if war:
-                clan_name = war.clan.name
-                opponent_name = war.opponent.name
-                content = f"`{clan_name}` VS `{opponent_name}`\n Current war state is {war.state}\n"
-                content += f"{war.clan.stars}/{war.clan.max_stars} VS {war.opponent.stars}/{war.opponent.max_stars} "
-            else:
-                content = " No wars found !"
+            try:
+                msg=await ctx.send(f"Getting War Status...")
+                clan_tag = coc.utils.correct_tag(clan_tag)
+                war = await self.bot.coc.get_current_war(clan_tag)
+                await msg.edit(content=f"Generating image for the war `{war.clan.name} VS {war.opponent.name}`")
+                await ImageMaker(BotFont.HAVTICA_FONT,BotImage.STATUS_IMAGE_LOC).make_stats_image(war)
+                file_path=os.path.join(os.getcwd())+BotImage.STATUS_IMAGE_TEMP_LOC
+                file= discord.File(file_path)
+                await ctx.send(file=file)
+                await msg.delete()
+            except coc.errors.PrivateWarLog:
+                content = "Clan has Private War Log, couldn't get war status"
+                await ctx.send(content=content)
+            
         else:
             content="No Default Clans linked. Try `help setup clan` First"
+            await ctx.send(content=content)
+        
+        await ctx.message.add_reaction(Emoji.GREEN_TICK)
+
+    @commands.max_concurrency(1)
+    @commands.command(name="War", aliases=["war","Gra","gra"],case_insensitive=True)
+    async def war_info(self, ctx):
+        """--> `gra` - Get the current war remaining base information"""
+        clan_tag = None
+        result= await self.db.get_clans_on_guild_information(ctx.guild.id)
+        if result:
+            list_channels = self.get_list_of_war_log_channel_from_list_of_record(result)
+            clan_tag = self.get_clan_tag_in_current_channel(ctx.channel.id,list_channels)
+            if clan_tag is None:
+                clan_tag = await self.db.get_default_clan_of_guild(ctx.guild.id)
+        else:
+            clan_tag = await self.db.get_default_clan_of_guild(ctx.guild.id)
+
+        if clan_tag:
+            try:
+                msg=await ctx.send(f"Getting War Status...")
+                clan_tag = coc.utils.correct_tag(clan_tag)
+                war = await self.bot.coc.get_current_war(clan_tag)
+                await msg.edit(content=f"Generating image for the war `{war.clan.name} VS {war.opponent.name}`")
+                await ImageMaker(BotFont.HAVTICA_FONT,BotImage.INWAR_IMAGE_LOC).make_inWar_image(war)
+                file_path=os.path.join(os.getcwd())+BotImage.INWAR_IMAGE_TEMP_LOC
+                file= discord.File(file_path)
+                await ctx.send(file=file)
+                await msg.delete()
+            except coc.errors.PrivateWarLog:
+                content = "Clan has Private War Log, couldn't get war status"
+                await ctx.send(content=content)
             
-        await ctx.send(content)
+        else:
+            content="No Default Clans linked. Try `help setup clan` First"
+            await ctx.send(content=content)
+        
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
     
     def prepare_player_found_message(self,player):

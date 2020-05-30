@@ -11,9 +11,15 @@ class BotImage():
     BIRTHDAY_TEMP_IMAGE="/images/temp/temp.png"
     BIRTHDAY_TEMP_IMAGE_NAME="temp.png"
     BIRTHDAY_TEMP_IMAGE_LOC="/images/temp/"
+    STATUS_IMAGE_LOC="/images/stats.jpg"
+    STATUS_IMAGE_TEMP_LOC='/images/temp/temp_war_status.png'
+    INWAR_IMAGE_LOC="/images/inWar.jpg"
+    INWAR_IMAGE_TEMP_LOC="/images/temp/temp_inWar_status.png"
+    
 
 class BotFont():
     PINEAPPLE_FONT = "/fonts/pineapple.ttf"
+    HAVTICA_FONT="/fonts/helvetica.otf"
 class BotVariables():
     BOT_ID=707282233958072371
     kwargs_create_message={"if_embed" : False,"title_url": False,"set_thumbnail_url":False,"set_image_url":False,"footer_icon_url":False,"author_icon_url":False}
