@@ -45,9 +45,9 @@ class ImageMaker():
         out=os.path.join(self.directory+ "/images/temp/temp_war_status.png")
         bg_image = Image.open(self.background_image)
         draw = ImageDraw.Draw(bg_image)
-        message = war.clan.name
+        message = f"{war.clan.name}".encode('utf-8')
         color = 'rgb(127,255,0)' 
-        await self.draw_text(draw,self.font,55,message,color,380,45,"Left")
+        await self.draw_text(draw,self.font,55,message.decode(),color,380,45,"Left")
         message = war.clan.tag
         await self.draw_text(draw,self.font,20,message,color,500,120,"Left")
         message=f"{war.clan.stars}/{war.clan.max_stars}"
@@ -57,9 +57,9 @@ class ImageMaker():
         message=f"{war.clan.destruction}"
         await self.draw_text(draw,self.font,40,message,color,80,470)
 
-        message = war.opponent.name
+        message = f"{war.opponent.name}".encode('latin-1', 'ignore')
         color = 'rgb(255,69,0)' 
-        await self.draw_text(draw,self.font,55,message,color,600,45)
+        await self.draw_text(draw,self.font,55,message.decode(),color,600,45)
         message = war.opponent.tag
         await self.draw_text(draw,self.font,20,message,color,600,120)
         message=f"{war.opponent.stars}/{war.clan.max_stars}"
@@ -164,7 +164,7 @@ class ImageMaker():
         draw = ImageDraw.Draw(bg_image)
         message = f"{war.clan.name}".encode('utf-8')
         color = 'rgb(127,255,0)' 
-        await self.draw_text(draw,self.font,55,message,color,380,45,"Left")
+        await self.draw_text(draw,self.font,55,message.decode(),color,380,45,"Left")
         message = war.clan.tag
         await self.draw_text(draw,self.font,20,message,color,500,120,"Left")
         await self.prepare_th_info_for_inWar_image(draw,home_bd,self.font,20,color,265,310)
@@ -172,7 +172,7 @@ class ImageMaker():
 
         message = f"{war.opponent.name}".encode('utf-8')
         color = 'rgb(255,69,0)' 
-        await self.draw_text(draw,self.font,55,message,color,600,45)
+        await self.draw_text(draw,self.font,55,message.decode(),color,600,45)
         message = war.opponent.tag
         await self.draw_text(draw,self.font,20,message,color,600,120)
         await self.prepare_th_info_for_inWar_image(draw,away_bd,self.font,20,color,265,360)
