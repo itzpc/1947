@@ -170,7 +170,7 @@ class ImageMaker():
         await self.prepare_th_info_for_inWar_image(draw,home_bd,self.font,20,color,265,310)
         await self.prepare_th_info_for_inWar_image(draw,home_rm_bd,self.font,20,color,265,500)
 
-        message = f"{war.opponent.name}".encode('utf-8')
+        message = f"{war.opponent.name}".encode('latin-1', 'ignore')
         color = 'rgb(255,69,0)' 
         await self.draw_text(draw,self.font,55,message.decode(),color,600,45)
         message = war.opponent.tag
