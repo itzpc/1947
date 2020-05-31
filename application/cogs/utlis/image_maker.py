@@ -57,7 +57,7 @@ class ImageMaker():
         message=f"{war.clan.destruction}"
         await self.draw_text(draw,self.font,40,message,color,80,470)
 
-        message = f"{war.opponent.name}".encode('latin-1', 'ignore')
+        message = f"{war.opponent.name}".encode('utf-8')
         color = 'rgb(255,69,0)' 
         await self.draw_text(draw,self.font,55,message.decode(),color,600,45)
         message = war.opponent.tag
