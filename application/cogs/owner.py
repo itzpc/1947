@@ -117,14 +117,13 @@ class Owner(commands.Cog):
     '''@commands.command(pass_context=True, name='t')
     async def test(self, ctx):
         """ Generates the log file of the bot for bebugging"""
-        msg=await ctx.send(f"Getting War Status...")
         war = await self.bot.coc.get_current_war("#29L9RVCL8")
-        await msg.edit(content=f"Generating image for the war `{war.clan.name} VS {war.opponent.name}`")
-        await ImageMaker(BotFont.HAVTICA_FONT,BotImage.INWAR_IMAGE_LOC).make_inWar_image(war)
-        file_path=os.path.join(os.getcwd())+BotImage.INWAR_IMAGE_TEMP_LOC
-        file= discord.File(file_path)
-        await ctx.send(file=file)
-        await msg.delete()
+        attac_table=dict({'war_id':6})
+        attack_table=WarAction.attack_updates(war,war.attacks[0],attac_table)
+        await self.db.insert_into_attack_table(attack_table)
+        content, embed = PrepMessage().prepare_on_war_attack_message(war.attacks[0],war,attack_table)
+        await ctx.send(content=content,embed=embed)
+        
         await ctx.message.add_reaction(Emoji.GREEN_TICK)'''
     
 def setup(bot):

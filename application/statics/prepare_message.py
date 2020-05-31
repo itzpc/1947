@@ -10,8 +10,7 @@ class PrepMessage():
     @staticmethod
     def get_info_on_defender_bases(defender,star_emoji,attack):
         best_stars = best_destruction = 0
-        print(f"\nATTACK {attack}")
-        print(f"\nDEFENSES {defender.defenses.remove(attack)}")
+        
         defensive_attack = list()
         if len(defender.defenses)>0:
             
@@ -23,8 +22,6 @@ class PrepMessage():
                 if member_defenses.destruction > best_destruction:
                     best_destruction = member_defenses.destruction
                 defensive_attack.append(f"{member_defenses.attacker.map_position}.` {member_defenses.attacker.name} `{str(star_emoji['star'])*member_defenses.stars} {member_defenses.destruction}%")
-        else:
-            print("No Defenses")
             
         return best_stars, best_destruction, defensive_attack
 
@@ -87,7 +84,7 @@ class PrepMessage():
     @staticmethod
     def print_destruction(prev_best_destruction,destruction):
         if prev_best_destruction:
-            print("Prev Des",prev_best_destruction)
+            
             change_in_destruction =  destruction - prev_best_destruction
             
             if change_in_destruction >0 :
@@ -101,16 +98,13 @@ class PrepMessage():
 
     @staticmethod
     def print_hit_type(enemy,th_attacker,th_defender):
-        if enemy.best_opponent_attack is None:
-            msg = " FRESH HIT - "
-        else:
-            msg ="NOT A FRESH HIT - "
+        
         if th_attacker == th_defender :
-            msg+= " SAME TH HIT "
+            msg= " SAME TH HIT "
         elif th_attacker < th_defender:
-            msg+= " SCOUT"
+            msg= " SCOUT"
         else:
-            msg+= " DIP"
+            msg= " DIP"
         return str(msg)
 
     @staticmethod
@@ -120,24 +114,29 @@ class PrepMessage():
             msg += f"{attacks} \n"
         return str(msg)
 
-    def prepare_on_war_attack_message(self,attack,war,remark):
+    def prepare_on_war_attack_message(self,attack,war,attack_table):
         embed_args = dict()
         attack_emoji, star_emoji, attack_msg , enemy, ally,colour=self.get_attack_info(attack.attacker.is_opponent,attack.attacker,attack.defender)
 
         best_stars, best_destruction, defesive_attack = self.get_info_on_defender_bases(attack.defender,star_emoji,attack)
         content = f"`{ally.map_position}`. {ally.name} {self.get_th_emoji(ally.town_hall)} {attack_emoji} {self.get_th_emoji(enemy.town_hall)} `{enemy.map_position}`. {enemy.name}"
-        embed_args["author_name"]="Details"
+        embed_args["author_icon_url"]=war.clan.badge.url
+        embed_args["author_name"]=f"{war.clan.name} - war_id:{attack_table['war_id']}"
         embed_args["embed_title"]= f"{attack_msg}"
         description=f"**STARS**\n"
         description+=f"{self.print_war_stars(best_stars,attack.stars,star_emoji)} \n\n"
         description+=f"**DESTRUCTION**\n"
         description+=f"{self.print_destruction(best_destruction,attack.destruction)} \n\n"
         description+=f"**HIT TYPE**\n"
-        description+=f"{self.print_hit_type(enemy,attack.attacker.town_hall,attack.defender.town_hall)} \n \n"
+        if attack_table['is_fresh_hit']:
+            hit_type="FRESH HIT"
+        else:
+            hit_type="NOT FRESH HIT"
+        description+=f"{hit_type} - {self.print_hit_type(enemy,attack.attacker.town_hall,attack.defender.town_hall)} \n \n"
         if len(defesive_attack)>0:
             description+=f"**PREVIOUS HITS ON THIS BASE**\n"
             description+=f"{self.print_previous_hit(defesive_attack,star_emoji)} \n \n"
-        description += f"{remark} \n\n"
+        description += f"{attack_table['remark']} \n\n"
         embed_args["embed_description"]=description
         embed_args["embed_colour"]=colour
         create_msg = CreateMessage(content,True)

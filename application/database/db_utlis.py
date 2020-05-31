@@ -557,7 +557,7 @@ class DbUtlis():
             return False  
     async def get_war_id_from_war_table(self,home_clan,opponentclan):
         try:
-            sql="select war_id from war where NOW() - interval '23 hours' < end_time and home_clan_tag=($1) and opponent_tag=($2) ;"
+            sql="select war_id from war where NOW() - interval '24 hours' < end_time and home_clan_tag=($1) and opponent_tag=($2) ;"
             val=(home_clan,opponentclan)
             result = await self.conn.fetchrow(sql,*val)
             if result:
@@ -569,10 +569,14 @@ class DbUtlis():
         except:
             logging.error(f"ERROR:  db_utlis.py -  -TRACEBACK \n{traceback.format_exc()}")
             return None
-    async def insert_into_attack_table(self,attack_insert_values):
+    async def insert_into_attack_table(self,attack_table):
         try:
-            sql="insert into attack values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28);"
-            await self.conn.execute(sql,*attack_insert_values)
+            column_names = ','.join(attack_table.keys())
+            print(column_names)
+            values = tuple(attack_table.values())
+            print("\n",values)
+            sql=f"insert into attack({column_names}) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32);"
+            await self.conn.execute(sql,*values)
             logging.info(f"INFO: db_utlis.py - insert_into_attack_table() : Inserted ")
             return True
         except:
