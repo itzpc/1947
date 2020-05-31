@@ -104,9 +104,9 @@ class Coc(commands.Cog, name="Clash of Clans"):
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
 
     @commands.max_concurrency(1)
-    @commands.command(name="War", aliases=["war","Gra","gra"],case_insensitive=True)
+    @commands.command(name="Defenses", aliases=["defenses","Grd","grd"],case_insensitive=True)
     async def war_info(self, ctx):
-        """--> `gra` - Get the current war remaining base information"""
+        """--> `defenses` - Get the current war remaining defenses information"""
         clan_tag = None
         result= await self.db.get_clans_on_guild_information(ctx.guild.id)
         if result:

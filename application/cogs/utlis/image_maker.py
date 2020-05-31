@@ -152,8 +152,8 @@ class ImageMaker():
 
     async def make_inWar_image(self,war):
         logging.info("INFO: image_maker.py - make_inWar_image() started")
-        home_war_info_dict = self.make_war_info_dict(war.opponent.members)
-        away_war_info_dict = self.make_war_info_dict(war.clan.members)
+        home_war_info_dict = self.make_war_info_dict(war.clan.members)
+        away_war_info_dict = self.make_war_info_dict(war.opponent.members)
         home_bd= self.make_bd(home_war_info_dict)
         away_bd=self.make_bd(away_war_info_dict)
         #home_bd= self.make_bd(war)
