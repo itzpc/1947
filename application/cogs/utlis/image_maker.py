@@ -45,7 +45,7 @@ class ImageMaker():
         out=os.path.join(self.directory+ "/images/temp/temp_war_status.png")
         bg_image = Image.open(self.background_image)
         draw = ImageDraw.Draw(bg_image)
-        message = f"{war.clan.name}".encode('utf-8')
+        message = f"{war.clan.name}".encode('latin-1', 'ignore')
         color = 'rgb(127,255,0)' 
         await self.draw_text(draw,self.font,55,message.decode(),color,380,45,"Left")
         message = war.clan.tag
@@ -57,7 +57,7 @@ class ImageMaker():
         message=f"{war.clan.destruction}"
         await self.draw_text(draw,self.font,40,message,color,80,470)
 
-        message = f"{war.opponent.name}".encode('utf-8')
+        message = f"{war.opponent.name}".encode('latin-1', 'ignore')
         color = 'rgb(255,69,0)' 
         await self.draw_text(draw,self.font,55,message.decode(),color,600,45)
         message = war.opponent.tag
@@ -162,7 +162,7 @@ class ImageMaker():
         out=os.path.join(self.directory+ "/images/temp/temp_inWar_status.png")
         bg_image = Image.open(self.background_image)
         draw = ImageDraw.Draw(bg_image)
-        message = f"{war.clan.name}".encode('utf-8')
+        message = f"{war.clan.name}".encode('latin-1', 'ignore')
         color = 'rgb(127,255,0)' 
         await self.draw_text(draw,self.font,55,message.decode(),color,380,45,"Left")
         message = war.clan.tag
