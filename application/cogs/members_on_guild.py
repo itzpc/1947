@@ -23,13 +23,13 @@ class MemberOnGuild(commands.Cog):
     async def on_member_join(self,member):
         guild = member.guild
         await self.db.insert_into_member_on_guild_table(guild.id,member.id)
-        logging.info(f"members_on_guild.py - on_member_join({member.id}) executed")
+        logging.info(f"INFO: members_on_guild.py - on_member_join({member.id}) executed")
     
     @commands.Cog.listener()
     async def on_member_remove(self,member):
         guild = member.guild
         await self.db.delete_from_member_on_guild_table(guild.id,member.id)
-        logging.info(f"members_on_guild.py - on_member_remove({member.id}) executed")
+        logging.info(f"INFO: members_on_guild.py - on_member_remove({member.id}) executed")
 
 def setup(bot):
     bot.add_cog(MemberOnGuild(bot))

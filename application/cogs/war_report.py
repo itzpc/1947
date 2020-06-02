@@ -43,14 +43,14 @@ class WarReporter(commands.Cog, name="War Report"):
                 try:
                     guild =  self.bot.get_guild(reporting_channels['guild_id'])
                     channel =  guild.get_channel(reporting_channels['channel_id'])
-                    logging.error(f"war_report.py - send_war_report({clantag}) - message send channel{channel.id}")
+                    logging.error(f"ERROR: war_report.py - send_war_report({clantag}) - message send channel{channel.id}")
                     await channel.send(content=content,embed=embed)
                 except Exception as Ex:
-                    logging.error(f"war_report.py - send_war_report({clantag}) - Exception {Ex}")
+                    logging.error(f"ERROR: war_report.py - send_war_report({clantag}) - Exception {Ex}")
         return 
 
     async def on_war_attack(self, attack, war):
-        logging.info(f"war_report.py - on_war_attack({attack},{war})")
+        logging.info(f"INFO: war_report.py - on_war_attack({attack},{war})")
         home_clan= war.clan_tag
         opponentclan =war.opponent.tag
         war_id = await self.db.get_war_id_from_war_table(home_clan,opponentclan)
@@ -67,10 +67,10 @@ class WarReporter(commands.Cog, name="War Report"):
         content, embed = PrepMessage().prepare_on_war_attack_message(attack,war,attack_table)
         await self.send_war_report(war.clan_tag,content,embed)
         await self.report_channel.send(content=content,embed=embed)
-        logging.info(f"INFO - war_report.py on_war_attack() executed - for clan tag {war.clan_tag}")
+        logging.info(f"INFO:  - war_report.py on_war_attack() executed - for clan tag {war.clan_tag}")
 
     async def on_war_state_change(self, current_state, war):
-        logging.info(f"war_report.py - on_war_state_change({current_state},{war})")
+        logging.info(f"INFO: war_report.py - on_war_state_change({current_state},{war})")
         if current_state == "preparation":
             war_table_insert=WarAction.war_state_prep_updates(war)
             await self.db.insert_into_war_table(war_table_insert)
@@ -78,7 +78,7 @@ class WarReporter(commands.Cog, name="War Report"):
             war_table_insert=WarAction.war_state_end_updates(war)
             await self.db.update_war_table(war_table_insert)
         await self.state_channel.send(f"{war.clan.name} just entered {current_state} state!")
-        logging.info(f"INFO - war_report.py on_war_state_change() executed - for clan tag {war.clan_tag}")
+        logging.info(f"INFO:  - war_report.py on_war_state_change() executed - for clan tag {war.clan_tag}")
         
     @property
     def report_channel(self):

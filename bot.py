@@ -71,7 +71,7 @@ class Bot1947(commands.AutoShardedBot):
                 self.load_extension(extension)
         except:
             print(f'Failed to load extension {extension}.', file=sys.stderr)
-            logging.error(f"Failed to load extension {extension}.")
+            logging.error(f"ERROR: Failed to load extension {extension}.")
             traceback.print_exc()
 
     async def initialize(self):
@@ -93,7 +93,7 @@ class Bot1947(commands.AutoShardedBot):
         await self.process_commands(message)
 
     async def on_ready(self):
-        logging.info("BOT IS ONLINE")
+        logging.info("INFO: BOT IS ONLINE")
         print(f'Ready...!')
         await BotActions(super(),self.postgre_db).online_message()
 
@@ -107,7 +107,7 @@ class Bot1947(commands.AutoShardedBot):
         await self.session.close()
         await super().close()
         print(f'BOT is offline')
-        logging.info("BOT IS OFFLINE")
+        logging.info("INFO: BOT IS OFFLINE")
         
     
     def run(self):

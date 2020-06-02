@@ -103,11 +103,12 @@ class DbUtlis():
                     logging.info(f"INFO: db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild")
                     
             else:
-                sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
-                await self.conn.execute(sql,*value)
                 sql = "INSERT INTO member(member_id) SELECT ($1) WHERE NOT EXISTS (SELECT 1 FROM member WHERE member_id=($1));"
                 value = (memberId)
                 await self.conn.execute(sql,value)
+                sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
+                value=(guildId,memberId)
+                await self.conn.execute(sql,*value)
                 logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild. members_on_guild table new entry added")
         except :
             logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) -TRACEBACK \n{traceback.format_exc()}")
