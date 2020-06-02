@@ -378,7 +378,7 @@ class WarAction():
                     defensive_attack.append(member_defenses)
 
             if len(defensive_attack) ==0:
-                attack_table['prev_defense_hit_count']=0:
+                attack_table['prev_defense_hit_count']=0
                 attack_table['is_fresh_hit']=True
                 attack_table['prev_defense_best_stars']=None
                 attack_table['prev_defense_best_dest']=None
