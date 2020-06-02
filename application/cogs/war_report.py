@@ -55,8 +55,7 @@ class WarReporter(commands.Cog, name="War Report"):
         opponentclan =war.opponent.tag
         war_id = await self.db.get_war_id_from_war_table(home_clan,opponentclan)
         if war_id:
-            attack_table = dict()
-            attack_table +={'war_id':war_id}
+            attack_table ={'war_id':war_id}
         else:
             war_table_insert=WarAction.war_state_prep_updates(war)
             await self.db.insert_into_war_table(war_table_insert)
