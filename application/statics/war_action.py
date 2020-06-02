@@ -188,7 +188,7 @@ class WarAction():
         attack_table+=(remark,)
         
         return attack_table
-    '''
+    
     @staticmethod
     def attack_updates(war,attack,attack_table):
         attack_table['attack_order']=attack.order
@@ -321,6 +321,165 @@ class WarAction():
                         remark="ATTACK IS GOOD - NICE HIT"
                     else:
                         remark="ATACK SEEMS OK - SCOPE FOR IMPROVEMENT"
+            attack_table['prev_defense_best_stars']=None
+            attack_table['prev_defense_best_dest']=None
+
+        attack_table['home_player_map_pos']=home.map_position
+        attack_table['home_player_th_level']=home.town_hall
+        attack_table['home_player_name']=home.name
+        attack_table['home_player_tag']=home.tag
+        attack_table['away_player_map_pos']=away.map_position
+        attack_table['away_player_th_level']=away.town_hall
+        attack_table['away_player_name']=away.name
+        attack_table['away_player_tag']=away.tag
+        attack_table['home_clan_tag']=war.clan.tag
+        attack_table['home_clan_name']=war.clan.name
+        attack_table['home_clan_level']=war.clan.level
+        attack_table['away_clan_tag']=war.opponent.tag
+        attack_table['away_clan_name']=war.opponent.name
+        attack_table['away_clan_level']=war.opponent.level
+        attack_table['stars']=attack.stars
+        attack_table['destruction']=attack.destruction
+        attack_table['remark']=remark
+        attack_table['attack_time']=datetime.utcnow()
+        attack_table['star_contribution']=attack.stars-best_stars
+        attack_table['dest_contribution']=attack.destruction-best_destruction
+        return attack_table
+    '''
+    @staticmethod
+    def attack_updates(war,attack,attack_table):
+        attack_table['attack_order']=attack.order
+        home=away=None
+        best_stars = best_destruction = 0
+        remark=""
+        attack_table['hit_category']=f"{attack.attacker.town_hall}VS{attack.defender.town_hall}"
+        if attack.attacker.town_hall == attack.defender.town_hall:
+            attack_table['hit_type']="SAME TH HIT"
+        elif attack.attacker.town_hall > attack.defender.town_hall:
+            attack_table['hit_type']="DIP"
+        else:
+            attack_table['hit_type']="SCOUT"
+
+
+        if attack.attacker.is_opponent: # It is a defensive attack
+            attack_table['attack_type']="DEFENCE"
+            away=attack.attacker
+            home=attack.defender
+
+            defensive_attack = list()
+            if len(home.defenses)>0:
+                for member_defenses in home.defenses:
+                    if member_defenses.attacker_tag == attack.attacker_tag:
+                        continue
+                    if member_defenses.stars > best_stars :
+                        best_stars = member_defenses.stars
+                    if member_defenses.destruction > best_destruction:
+                        best_destruction = member_defenses.destruction 
+                    defensive_attack.append(member_defenses)
+
+            if len(defensive_attack) ==0:
+                attack_table['prev_defense_hit_count']=0:
+                attack_table['is_fresh_hit']=True
+                attack_table['prev_defense_best_stars']=None
+                attack_table['prev_defense_best_dest']=None
+                if attack.stars==3:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="EXTREMELY POOR DEFENSE - CHANGE YOUR BASE"
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="EXTREMELY POOR DEFENSE - CHANGE YOUR BASE ASAP"
+                    else:
+                        remark="DEFENSE IS OK"
+                else:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="DEFENSE IS GOOD"
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="DEFENSE SEEMS OK"
+                    else:
+                        remark="DEFENSE IS VERY GOOD"
+            else:
+                attack_table['prev_defense_hit_count']=len(member_defenses)
+                attack_table['is_fresh_hit']=False
+                attack_table['prev_defense_best_stars']=best_stars
+                attack_table['prev_defense_best_dest']=best_destruction
+                
+                if attack.stars==0:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="DEFENCE IS EXTREMELY GOOD "
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="DEFENCE SEEMS GOOD"
+                    else:
+                        remark="DEFENSE IS EXTREMELY GOOD - KEEP THIS BASE"
+                else:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="DEFENCE IS NICE - CONSIDER CHANGING BASE"
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="POOR DEFENSE - CHANGE YOUR BASE ASAP"
+                    else:
+                        remark="DEFENSE SEEMS VERY GOOD"
+            attack_table['prev_attack_hit_count']= None
+            attack_table['prev_attack_best_stars']=None
+            attack_table['prev_attack_best_dest']=None
+
+
+        else:
+            attack_table['attack_type']="ATTACK"
+            away=attack.defender
+            home=attack.attacker
+
+            offensive_attack = list()
+            if len(away.defenses)>0:
+                for member_defenses in away.defenses:
+                    if member_defenses.attacker_tag == attack.attacker_tag:
+                        continue
+                    if member_defenses.stars > best_stars :
+                        best_stars = member_defenses.stars
+                    if member_defenses.destruction > best_destruction:
+                        best_destruction = member_defenses.destruction 
+                    offensive_attack.append(member_defenses)
+
+
+            if len(offensive_attack) == 0
+                attack_table['prev_attack_hit_count']==0:
+                attack_table['is_fresh_hit']=True
+                attack_table['prev_attack_best_stars']=None
+                attack_table['prev_attack_best_dest']=None
+
+                if attack.stars==3:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="EXTREMELY GOOD ATTACK - SKILLED PLAYER"
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="EXTREMELY GOOD ATTACK - HIGHLY SKILLED PLAYER"
+                    else:
+                        remark="EXTREMELY POOR ATTACK"
+                else:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="ATTACK NEEDS IMPROVEMENTS - CHANGE STRATAGIES"
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="ATTACK SEEMS OK"
+                    else:
+                        remark="EXTREMELY POOR ATTACK - NOT RECOMMENDED "
+            else:
+                attack_table['prev_attack_hit_count']=len(offensive_attack)
+                attack_table['is_fresh_hit']=False
+                attack_table['prev_attack_best_stars']=best_stars
+                attack_table['prev_attack_best_dest']=best_destruction
+                
+                
+                if attack.stars==0:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="EXTREMELY POOR ATTACK - NOT RECOMMENDED - PRACTISE REQUIRED"
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="ATTACKS SEEMS FAILURE"
+                    else:
+                        remark="ATTACK IS BELOW STANDARD - NOT RECOMMENDED TO STAY"
+                else:
+                    if attack_table['hit_type'] == "SAME TH HIT":
+                        remark="ATTACK IS OK - GOOD PLAYER"
+                    elif attack_table['hit_type'] == "SCOUT":
+                        remark="ATTACK IS GOOD - NICE HIT"
+                    else:
+                        remark="ATACK SEEMS OK - SCOPE FOR IMPROVEMENT"
+            attack_table['prev_defense_hit_count']= None
             attack_table['prev_defense_best_stars']=None
             attack_table['prev_defense_best_dest']=None
 
