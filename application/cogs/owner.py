@@ -113,7 +113,7 @@ class Owner(commands.Cog):
         file = discord.File(directory,filename=BotFiles.ATTACK_TABLE_NAME)
         await log_channel.send(file=file)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
-    
+    @commands.is_owner()
     @commands.command(pass_context=True, name='t')
     async def test(self, ctx):
         """ Generates the log file of the bot for bebugging"""
