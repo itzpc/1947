@@ -37,13 +37,14 @@ class Coc(commands.Cog, name="Clash of Clans"):
 
     @staticmethod
     def get_clan_tag_in_current_channel(current_channel,list_of_channel_dic):
-        logging.info(f"users.py - get_clan_tag_in_current_channel({current_channel},{list_of_channel_dic})")
+        
         clan_tag = None
         if list_of_channel_dic:
             for record in list_of_channel_dic:
                 if current_channel in record.values():
                     clan_tag = record['clantag']
                     return clan_tag
+        logging.info(f"INFO: users.py - get_clan_tag_in_current_channel() - executed \n Parameters - {current_channel},{list_of_channel_dic})")
         return clan_tag
 
     @commands.command(name="Clan", aliases=["c","C","clan"])

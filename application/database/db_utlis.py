@@ -67,7 +67,7 @@ class DbUtlis():
                 result = await self.conn.fetchrow(sql,*value)
                 if result:
                     if result['left_on']:
-                        sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($2);"
+                        sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($3);"
                         value=(None,guildId,memberId)
                         await self.conn.execute(sql,*value)
                         logging.info(f"INFO: db_utlis.py - insert_into_member_on_guild_table({guildId},{memberId}) Member has rejoined guild")
@@ -95,7 +95,7 @@ class DbUtlis():
             result = await self.conn.fetchrow(sql,*value)
             if result:
                 if result['left_on']:
-                    logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has already left guild")
+                    logging.error(f"WARNING:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has already left guild")
                 else:
                     sql = "UPDATE members_on_guild SET left_on =($1) where guild_id=($2) and member_id = ($3);"
                     value=(datetime.utcnow(),guildId,memberId)
@@ -109,7 +109,7 @@ class DbUtlis():
                 sql = "INSERT INTO members_on_guild(guild_id,member_id) VALUES ($1,$2);"
                 value=(guildId,memberId)
                 await self.conn.execute(sql,*value)
-                logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild. members_on_guild table new entry added")
+                logging.error(f"WARNING:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) Member has left guild. members_on_guild table new entry added")
         except :
             logging.error(f"ERROR:  db_utlis.py - delete_from_member_on_guild_table({guildId},{memberId}) -TRACEBACK \n{traceback.format_exc()}")
 

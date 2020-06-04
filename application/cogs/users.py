@@ -192,7 +192,7 @@ class Users(commands.Cog):
                             text += f"{count}. {userObj.display_name} - {record['dob']} \n"
                         count+=1
                 except Exception as Ex:
-                    logging.info("users.py : list_bday : Exception {Ex}")
+                    logging.info("WARNING: users.py : list_bday : Exception {Ex}")
             if text:
                 p = TextPages(ctx, text=text ,max_size=500)
                 await p.paginate()

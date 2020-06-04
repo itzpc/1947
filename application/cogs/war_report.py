@@ -43,7 +43,7 @@ class WarReporter(commands.Cog, name="War Report"):
                 try:
                     guild =  self.bot.get_guild(reporting_channels['guild_id'])
                     channel =  guild.get_channel(reporting_channels['channel_id'])
-                    logging.error(f"ERROR: war_report.py - send_war_report({clantag}) - message send channel{channel.id}")
+                    logging.error(f"INFO: war_report.py - send_war_report({clantag}) - message send channel{channel.id}")
                     await channel.send(content=content,embed=embed)
                 except Exception as Ex:
                     logging.error(f"ERROR: war_report.py - send_war_report({clantag}) - Exception {Ex}")
