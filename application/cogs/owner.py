@@ -104,14 +104,14 @@ class Owner(commands.Cog):
         await log_channel.send(file=file)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
     @commands.is_owner()
-    @commands.command(pass_context=True, name='backup')
-    async def backup(self, ctx):
-        """ Generates the log file of the bot for bebugging"""
+    @commands.command(pass_context=True, name='export')
+    async def export(self, ctx,war_id:int=None):
+        """ Export a war data to excel"""
         directory=os.path.join(os.getcwd()+BotFiles.ATTACK_TABLE_LOC)
-        await self.db.backup_attack_table(str(directory))
+        await self.db.export_attack_table_by_war_id(str(directory),war_id)
         log_channel = self.get_log_channel()
         file = discord.File(directory,filename=BotFiles.ATTACK_TABLE_NAME)
-        await log_channel.send(file=file)
+        await ctx.send(file=file)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
     @commands.is_owner()
     @commands.command(pass_context=True, name='t')

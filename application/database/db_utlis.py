@@ -588,8 +588,23 @@ class DbUtlis():
         try:
             conn = await PostgreDB(PostgreeDB_Config.URI).sample_connection()
             await conn.copy_from_table('attack',output=attack_table_loc,format='csv')
-            logging.info(f"INFO: db_utlis.py - backup_attack_table() : Done ")
+            logging.info(f"INFO: db_utlis.py - backup_attack_table() : Executed ")
             await PostgreDB(PostgreeDB_Config.URI).close(conn)
+            return True
+        except:
+            logging.error(f"ERROR:  db_utlis.py - backup_attack_table() -TRACEBACK \n{traceback.format_exc()}")
+            return False
+
+    async def export_attack_table_by_war_id(self,attack_table_loc,war_id):
+        try:
+            if war_id is None:
+                await self.backup_attack_table(attack_table_loc)
+                logging.info(f"INFO: db_utlis.py - export_attack_table_by_war_id() : Executed ")
+            else:
+                conn = await PostgreDB(PostgreeDB_Config.URI).sample_connection()
+                sql="SELECT * FROM attack where war_id = $1"
+                await conn.copy_from_query(sql,int(war_id),output=attack_table_loc,format='csv')
+                await PostgreDB(PostgreeDB_Config.URI).close(conn)
             return True
         except:
             logging.error(f"ERROR:  db_utlis.py - backup_attack_table() -TRACEBACK \n{traceback.format_exc()}")
