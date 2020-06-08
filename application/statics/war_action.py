@@ -397,7 +397,7 @@ class WarAction():
                     else:
                         remark="DEFENSE IS VERY GOOD"
             else:
-                attack_table['prev_defense_hit_count']=len(member_defenses)
+                attack_table['prev_defense_hit_count']=len(defensive_attack)
                 attack_table['is_fresh_hit']=False
                 attack_table['prev_defense_best_stars']=best_stars
                 attack_table['prev_defense_best_dest']=best_destruction
