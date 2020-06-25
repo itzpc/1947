@@ -22,6 +22,7 @@ class BotFont():
     HAVTICA_FONT="/fonts/helvetica.otf"
     CJK_FONT="fonts/CJK.ttc"
     CJK_FONT2="fonts/DejaVuSans-Bold.ttf"
+    SC_FONT="fonts/SupercellFont.ttf"
 class BotVariables():
     BOT_ID=707282233958072371
     kwargs_create_message={"if_embed" : False,"title_url": False,"set_thumbnail_url":False,"set_image_url":False,"footer_icon_url":False,"author_icon_url":False}

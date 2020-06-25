@@ -17,7 +17,7 @@ from application.constants.guildsupport import GuildSupport
 from application.constants.bot_const import BotFiles,BotFiles
 from application.statics.war_action import WarAction
 from .utlis.image_maker import ImageMaker
-
+from .utlis.birthday import Birthday
 class Owner(commands.Cog):
     """Commands for Only PC"""
 
@@ -114,17 +114,12 @@ class Owner(commands.Cog):
         await ctx.send(file=file)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
     @commands.is_owner()
-    @commands.command(pass_context=True, name='t')
-    async def test(self, ctx):
-        """ Generates the log file of the bot for bebugging"""
-        msg=await ctx.send("getting info")
-        war = await self.bot.coc.get_current_war("#L890QP29")
-        await msg.edit(content=f"Generating image for the war `{war.clan.name} VS {war.opponent.name}`")
-        await ImageMaker(BotFont.HAVTICA_FONT,BotImage.INWAR_IMAGE_LOC).make_inWar_image(war)
-        file_path=os.path.join(os.getcwd())+BotImage.INWAR_IMAGE_TEMP_LOC
-        file= discord.File(file_path)
-        await ctx.send(file=file)
-        await msg.delete()
+    @commands.command(pass_context=True, name='bday_img')
+    async def create_bday_image(self, ctx,user:discord.User):
+        """ --> bday_img @user -> create bday image of a user"""
+        #user = self.bot.get_user(346223879485652992)
+        await Birthday(ctx.channel,user).wish_birthday()
+        
     
 def setup(bot):
     bot.add_cog(Owner(bot))
