@@ -11,3 +11,6 @@ asyncpg
 pillow
 requests-async
 #pandas
+python-dateutil
+pytz >= 2018.5
+astral >= 1.6.1

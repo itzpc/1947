@@ -16,7 +16,7 @@ from datetime import datetime,date,timedelta
 
 from .utlis.paginator import TextPages
 from .utlis.birthday import Birthday
-
+from .utlis import ailotime
 class Users(commands.Cog):
     """Everyone can use this commands"""
     def __init__(self, bot):
@@ -357,7 +357,16 @@ class Users(commands.Cog):
         embed.add_field(name="# Users", value=f"{len(self.bot.users)}", inline=True)
         await ctx.send(embed=embed)
         await ctx.message.add_reaction(Emoji.GREEN_TICK)
-
-
+    @commands.command(aliases=['Conv','conv','Convert'])
+    async def convert(self, ctx,*,input:str):
+        """--> `conv HH:MM in CountryCode to CountryCode` - conv 13:00 in IN to CA  """
+        logging.info("WARNING: convert exe")
+        try:
+            output = ailotime.command_conv(input)
+            embed_answer = discord.Embed(title=output.title, description='\n'.join(output.description), color=int(output.color, 16))
+            await ctx.send(embed=embed_answer)
+            await ctx.message.add_reaction(Emoji.GREEN_TICK)
+        except:
+            await ctx.send('Type `conv 13:00 in IN to CA` to convert. Mention Time in 24HR format')
 def setup(bot):
     bot.add_cog(Users(bot))

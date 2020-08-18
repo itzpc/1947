@@ -48,3 +48,5 @@ class BotFiles():
     LOG_FILE_LOC = '/files/log.txt'
     ATTACK_TABLE_LOC='/files/attack_table.csv'
     ATTACK_TABLE_NAME='attack_table.csv'
+    DB_CITIES='/files/cities.csv'
+    DB_COUNTRIES='/files/countries.csv'
