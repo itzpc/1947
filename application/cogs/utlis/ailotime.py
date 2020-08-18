@@ -44,9 +44,9 @@ acceptedFormats = (
 ['complete', '%d/%m/%Y, %H:%M'],
 ['complete', '%d/%m/%Y, %I:%M%p']
 )
-link_github_base = 'https://github.com/Ailothaen/ailotime'
-link_github_wiki = 'https://github.com/Ailothaen/ailotime/wiki'
-link_github_issues = 'https://github.com/Ailothaen/ailotime/issues'
+link_github_base = 'https://github.com/pcakhilnadh'
+link_github_wiki = 'https://discord.gg/hwBWesc'
+link_github_issues = 'https://discord.gg/hwBWesc'
 version = '1.0'
 
 
@@ -143,15 +143,15 @@ def errorMessage(type, **kwargs):
 	if type == 'IncorrectPlace':
 		return Output(success=False, subtype=None, color='e84118', title=':warning: Something went wrong', description=['I don\'t know the place {}. Try to write another more known city, or check whether the name is correct.'.format(kwargs['place'])], subfields=None)
 	elif type == 'IncorrectInput':
-		return Output(success=False, subtype=None, color='e84118', title=':warning: Something went wrong', description=['I don\'t understand at all what you wrote. Follow the guide here to properly write your command: {}'.format(link_github_wiki)], subfields=None)
+		return Output(success=False, subtype=None, color='e84118', title=':warning: Something went wrong', description=['I don\'t understand at all what you wrote. Report to 1947 Support Server {}'.format(link_github_wiki)], subfields=None)
 	elif type == 'IncorrectTime':
-		return Output(success=False, subtype=None, color='e84118', title=':warning: Something went wrong', description=['I don\'t understand the time you entered. Follow the guide here to properly write your time: {}'.format(link_github_wiki)], subfields=None)
+		return Output(success=False, subtype=None, color='e84118', title=':warning: Something went wrong', description=['I don\'t understand the time you entered. Report to 1947 Support Server {}'.format(link_github_wiki)], subfields=None)
 		
 	# more critical errors
 	elif type == 'IncorrectData':
-		return Output(success=False, subtype=None, color='e84118', title=':bangbang: Something went (really) wrong', description=['I found the place you mean, but the data I have seems to be incorrect. Please report the problem by opening an issue on {} with this info:'.format(link_github_issues, kwargs)], subfields=None)
+		return Output(success=False, subtype=None, color='e84118', title=':bangbang: Something went (really) wrong', description=['I found the place you mean, but the data I have seems to be incorrect. Please Report to 1947 Support Server'.format(link_github_issues, kwargs)], subfields=None)
 	else:
-		return Output(success=False, subtype=None, color='e84118', title=':bangbang: Something went (really) wrong', description=['... and I don\'t even know what is it. Please report the problem by opening an issue on {}.'.format(link_github_issues)], subfields=None)
+		return Output(success=False, subtype=None, color='e84118', title=':bangbang: Something went (really) wrong', description=['... and I don\'t even know what is it. Please report Report to 1947 Support Server {}.'.format(link_github_issues)], subfields=None)
 	
 		
 def separateCountryCodes(city):
