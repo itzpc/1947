@@ -23,6 +23,7 @@ class Users(commands.Cog):
         self.bot = bot
         self.task = self.bot.loop.create_task(self.initialize())
         self.db = DbUtlis(self.bot.postgre_db)
+        self._last_result = None
     def cog_unload(self):
         self.task.cancel()
         self.bot.coc.remove_events(self.on_event_error)
@@ -368,5 +369,55 @@ class Users(commands.Cog):
             await ctx.message.add_reaction(Emoji.GREEN_TICK)
         except:
             await ctx.send('Type `conv 13:00 in IN to CA` to convert. Mention Time in 24HR format')
+    def cleanup_code(self, content):
+        """Automatically removes code blocks from the code."""
+        # remove ```py\n```
+        if content.startswith('```') and content.endswith('```'):
+            return '\n'.join(content.split('\n')[1:-1])
+
+        return content.strip('` \n')
+
+
+    @commands.command(pass_context=True, name='python')
+    async def _python(self, ctx, *, body: str):
+        """Evaluates a code"""
+
+        env = {
+            '_': self._last_result
+        }
+
+        env.update(globals())
+
+        body = self.cleanup_code(body)
+        stdout = io.StringIO()
+
+        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        else:
+            value = stdout.getvalue()
+            try:
+                await ctx.message.add_reaction('\u2705')
+            except:
+                pass
+
+            if ret is None:
+                if value:
+                    await ctx.send(f'```py\n{value}\n```')
+            else:
+                self._last_result = ret
+                await ctx.send(f'```py\n{value}{ret}\n```')
+
 def setup(bot):
     bot.add_cog(Users(bot))
